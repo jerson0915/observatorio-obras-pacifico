@@ -692,7 +692,17 @@ function renderKpis(F) {
 }
 
 /* ---------- mapa ---------- */
-let map, polys = {}, bubbles = {}, labels = {};
+let map, polys = {}, bubbles = {}, labels = {}, lastMun = "";
+const quieto = matchMedia("(prefers-reduced-motion: reduce)");
+/* Lleva el mapa al municipio elegido, o a los tres si no hay ninguno */
+function enfocarMapa() {
+  if (!map || S.mun === lastMun) return;
+  lastMun = S.mun;
+  const b = DATA.bounds;
+  const destino = S.mun ? polys[S.mun].getBounds() : L.latLngBounds([[b[1], b[0]], [b[3], b[2]]]);
+  const opts = { padding: [24, 24], maxZoom: 11 };
+  if (quieto.matches) map.fitBounds(destino, opts); else map.flyToBounds(destino, { ...opts, duration: 0.9 });
+}
 function initMap() {
   if (!window.L) { $("map").replaceChildren(el("div", "empty", "El mapa no pudo cargar. Revisa la conexión y recarga la página.")); return; }
   const b = DATA.bounds;
@@ -709,7 +719,7 @@ function initMap() {
     const p = L.geoJSON(m.geometria, { style: () => ({ color: "#ffffff", weight: 1.5, opacity: .9, fillColor: "#ffffff", fillOpacity: .06 }) }).addTo(map);
     p.on("click", () => toggle("mun", m.nombre));
     p.on("mouseover", () => p.setStyle({ weight: 3 }));
-    p.on("mouseout", () => p.setStyle({ weight: S.mun === m.nombre ? 3 : 1.5 }));
+    p.on("mouseout", () => p.setStyle({ weight: S.mun === m.nombre ? 4 : 1.5 }));
     polys[m.nombre] = p;
     const c = L.circleMarker([m.lat, m.lon], { radius: 10, color: "#ffffff", weight: 2, fillColor: cssVar(m.color), fillOpacity: .9 }).addTo(map);
     c.on("click", () => toggle("mun", m.nombre));
@@ -736,13 +746,16 @@ function renderMap() {
     const sel = S.mun === m.nombre, dim = S.mun && !sel;
     bubbles[m.nombre].setRadius(rows.length ? 8 + 34 * Math.sqrt(v / maxV) : 0);
     bubbles[m.nombre].setStyle({ fillOpacity: dim ? .35 : .9, fillColor: cssVar(m.color) });
-    polys[m.nombre].setStyle({ weight: sel ? 3 : 1.5, fillOpacity: sel ? .16 : .06, opacity: dim ? .5 : .9 });
+    polys[m.nombre].setStyle({ color: sel ? cssVar(m.color) : "#ffffff", weight: sel ? 4 : 1.5, fillColor: sel ? cssVar(m.color) : "#ffffff", fillOpacity: sel ? .22 : .06, opacity: dim ? .5 : .95 });
+    if (sel) polys[m.nombre].bringToFront();
     const eje = rows.filter((c) => c.estado === "En ejecución").length;
     const tt = `<strong>${m.titulo}</strong><br>${nf.format(rows.length)} contratos · ${M(v)}<br>${nf.format(eje)} en ejecución<br><span style="opacity:.7">Clic para ${sel ? "quitar el filtro" : "filtrar"}</span>`;
     bubbles[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", direction: "top", offset: [0, -8] });
     polys[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", sticky: true });
     labels[m.nombre].setIcon(L.divIcon({ className: "", html: `<div class="mun-label">${m.titulo}<small>${nf.format(rows.length)} · ${M(v)}</small></div>`, iconSize: [160, 34], iconAnchor: [80, -16 - 34 * Math.sqrt(v / maxV) * .6] }));
   }
+  for (const m of MUN) bubbles[m.nombre].bringToFront();
+  enfocarMapa();
 }
 
 /* ---------- estado ---------- */
