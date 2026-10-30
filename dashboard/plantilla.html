@@ -692,11 +692,25 @@ function renderKpis(F) {
 }
 
 /* ---------- mapa ---------- */
-let map, polys = {}, bubbles = {}, labels = {};
+let map, polys = {}, bubbles = {}, labels = {}, lastMun = "";
+const quieto = matchMedia("(prefers-reduced-motion: reduce)");
+/* Lleva el mapa al municipio elegido, o a los tres si no hay ninguno */
+function enfocarMapa() {
+  if (!map || S.mun === lastMun) return;
+  lastMun = S.mun;
+  const b = DATA.bounds;
+  const destino = S.mun ? polys[S.mun].getBounds() : L.latLngBounds([[b[1], b[0]], [b[3], b[2]]]);
+  // Con un municipio elegido se acerca al menos al nivel 10, centrado en él
+  const z = S.mun ? Math.min(11, Math.max(10, map.getBoundsZoom(destino, false, L.point(48, 48)))) : map.getBoundsZoom(destino, false, L.point(20, 20));
+  const centro = destino.getCenter();
+  if (quieto.matches) map.setView(centro, z); else map.flyTo(centro, z, { duration: 0.9 });
+}
 function initMap() {
   if (!window.L) { $("map").replaceChildren(el("div", "empty", "El mapa no pudo cargar. Revisa la conexión y recarga la página.")); return; }
   const b = DATA.bounds;
-  map = L.map("map", { scrollWheelZoom: false, minZoom: 9, maxZoom: 13, maxBounds: [[b[1] - .3, b[0] - .4], [b[3] + .3, b[2] + .4]] });
+  map = L.map("map", { scrollWheelZoom: false, minZoom: 9, maxZoom: 13, maxBounds: [[b[1] - .5, b[0] - .7], [b[3] + .5, b[2] + .7]] });
+  // La vista se fija ANTES de agregar capas: Leaflet falla si dibuja polígonos sin vista
+  map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [10, 10] });
   const attr = "Imágenes © Esri, Maxar, Earthstar Geographics · Límites © OpenStreetMap";
   const blank = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
   if (TILES && Object.keys(TILES).length) {
@@ -709,14 +723,13 @@ function initMap() {
     const p = L.geoJSON(m.geometria, { style: () => ({ color: "#ffffff", weight: 1.5, opacity: .9, fillColor: "#ffffff", fillOpacity: .06 }) }).addTo(map);
     p.on("click", () => toggle("mun", m.nombre));
     p.on("mouseover", () => p.setStyle({ weight: 3 }));
-    p.on("mouseout", () => p.setStyle({ weight: S.mun === m.nombre ? 3 : 1.5 }));
+    p.on("mouseout", () => p.setStyle({ weight: S.mun === m.nombre ? 4 : 1.5 }));
     polys[m.nombre] = p;
     const c = L.circleMarker([m.lat, m.lon], { radius: 10, color: "#ffffff", weight: 2, fillColor: cssVar(m.color), fillOpacity: .9 }).addTo(map);
     c.on("click", () => toggle("mun", m.nombre));
     bubbles[m.nombre] = c;
     labels[m.nombre] = L.marker([m.lat, m.lon], { interactive: false, icon: L.divIcon({ className: "", html: "" }) }).addTo(map);
   }
-  map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [10, 10] });
   new ResizeObserver(() => map.invalidateSize()).observe($("map"));
 }
 function renderMap() {
@@ -736,13 +749,16 @@ function renderMap() {
     const sel = S.mun === m.nombre, dim = S.mun && !sel;
     bubbles[m.nombre].setRadius(rows.length ? 8 + 34 * Math.sqrt(v / maxV) : 0);
     bubbles[m.nombre].setStyle({ fillOpacity: dim ? .35 : .9, fillColor: cssVar(m.color) });
-    polys[m.nombre].setStyle({ weight: sel ? 3 : 1.5, fillOpacity: sel ? .16 : .06, opacity: dim ? .5 : .9 });
+    polys[m.nombre].setStyle({ color: sel ? cssVar(m.color) : "#ffffff", weight: sel ? 4 : 1.5, fillColor: sel ? cssVar(m.color) : "#ffffff", fillOpacity: sel ? .22 : .06, opacity: dim ? .5 : .95 });
+    if (sel) polys[m.nombre].bringToFront();
     const eje = rows.filter((c) => c.estado === "En ejecución").length;
     const tt = `<strong>${m.titulo}</strong><br>${nf.format(rows.length)} contratos · ${M(v)}<br>${nf.format(eje)} en ejecución<br><span style="opacity:.7">Clic para ${sel ? "quitar el filtro" : "filtrar"}</span>`;
     bubbles[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", direction: "top", offset: [0, -8] });
     polys[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", sticky: true });
     labels[m.nombre].setIcon(L.divIcon({ className: "", html: `<div class="mun-label">${m.titulo}<small>${nf.format(rows.length)} · ${M(v)}</small></div>`, iconSize: [160, 34], iconAnchor: [80, -16 - 34 * Math.sqrt(v / maxV) * .6] }));
   }
+  for (const m of MUN) bubbles[m.nombre].bringToFront();
+  enfocarMapa();
 }
 
 /* ---------- estado ---------- */
@@ -885,12 +901,15 @@ $("prev").addEventListener("click", () => { S.page--; renderTable(); });
 $("next").addEventListener("click", () => { S.page++; renderTable(); });
 
 /* ---------- todo junto ---------- */
+// Cada sección se dibuja por separado: si una falla, las demás siguen apareciendo
+const seguro = (nombre, fn) => { try { fn(); } catch (e) { console.error(`No se pudo dibujar ${nombre}:`, e); } };
 function update() {
   S.page = 0; persist(); syncControls(); hideTip();
   const F = C.filter((c) => pass(c));
-  renderInversion(); renderTimeline(); renderKpis(F); renderMap(); renderEstado(); renderYears(); renderAlerts(); renderTable();
-  hbars($("sectores"), agg(C.filter((c) => pass(c, "sec")), (c) => c.sector), "sec");
-  hbars($("contratistas"), agg(C.filter((c) => pass(c, "con")), (c) => c.contratista).slice(0, 10), "con", (r) => `${r.k} (${r.n})`);
+  seguro("inversión", renderInversion); seguro("línea de tiempo", renderTimeline); seguro("indicadores", () => renderKpis(F));
+  seguro("mapa", renderMap); seguro("estado", renderEstado); seguro("años", renderYears); seguro("alertas", renderAlerts); seguro("tabla", renderTable);
+  seguro("sectores", () => hbars($("sectores"), agg(C.filter((c) => pass(c, "sec")), (c) => c.sector), "sec"));
+  seguro("contratistas", () => hbars($("contratistas"), agg(C.filter((c) => pass(c, "con")), (c) => c.contratista).slice(0, 10), "con", (r) => `${r.k} (${r.n})`));
 }
 /* ---------- apariencia: paletas, colores propios y modo ---------- */
 // Cada paleta trae su versión clara y oscura: [acento, Guapi, Timbiquí, López de Micay]
@@ -936,7 +955,7 @@ document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") $("look"
 
 $("m-corte").textContent = `Datos con corte al ${DATA.corteTexto}`;
 applyLook(false);
-initMap(); renderHead(); update();
+seguro("mapa", initMap); renderHead(); update();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyLook(true));
 new MutationObserver(() => { const want = LOOK.modo === "auto" ? undefined : LOOK.modo; if (root.dataset.theme !== want) { LOOK.modo = root.dataset.theme || "auto"; } lookColors().forEach((c, i) => root.style.setProperty(VARS[i], c)); renderMap(); renderTimeline(); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 </script>
