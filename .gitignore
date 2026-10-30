@@ -1,0 +1,5 @@
+# Descargas que los notebooks vuelven a generar
+datos/cache/
+dashboard/dashboard.html
+.ipynb_checkpoints/
+.DS_Store

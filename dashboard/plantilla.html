@@ -1,0 +1,942 @@
+<title>Observatorio de Obras Públicas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Contratos de obra pública en Guapi, Timbiquí y López de Micay (Cauca), 2022–2026, a partir de SECOP I y SECOP II.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>/*__LEAFLET_CSS__*/</style>
+<style>
+/* Layout: encabezado → barra de filtros fija → inversión (total, por municipio, por habitante, línea de tiempo) → mapa + estado/sector → años + contratistas → alertas → tabla → metodología. */
+:root {
+  --bg: #f3f5f1;          /* papel con un leve tinte de manglar */
+  --surface: #fcfcfa;
+  --ink: #14201b;
+  --ink-2: #46544e;
+  --muted: #76837d;
+  --line: #dde2da;
+  --accent: #0e6977;      /* agua de río */
+  --accent-soft: #d5e9ea;
+  --m1: #2a78d6;          /* Guapi */
+  --m2: #eb6834;          /* Timbiquí */
+  --m3: #1baf7a;          /* López de Micay */
+  --good: #128a2e;
+  --warning: #b07a00;
+  --critical: #c93636;
+  --neutral: #8a948f;
+  --ok-soft: #dcefdf;
+  --warn-soft: #f7ebc8;
+  --crit-soft: #f6dcdc;
+  --neutral-soft: #e7eae6;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1513; --surface: #161e1b; --ink: #e6ebe7; --ink-2: #b2bdb7; --muted: #84908a; --line: #29332f;
+    --accent: #4fb2bf; --accent-soft: #19383c; --m1: #3987e5; --m2: #d95926; --m3: #199e70;
+    --good: #3cc25a; --warning: #f2b632; --critical: #ef6a6a; --neutral: #8f9a95;
+    --ok-soft: #173a22; --warn-soft: #3d3215; --crit-soft: #3e1d1d; --neutral-soft: #222b28;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1513; --surface: #161e1b; --ink: #e6ebe7; --ink-2: #b2bdb7; --muted: #84908a; --line: #29332f;
+  --accent: #4fb2bf; --accent-soft: #19383c; --m1: #3987e5; --m2: #d95926; --m3: #199e70;
+  --good: #3cc25a; --warning: #f2b632; --critical: #ef6a6a; --neutral: #8f9a95;
+  --ok-soft: #173a22; --warn-soft: #3d3215; --crit-soft: #3e1d1d; --neutral-soft: #222b28;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 1000; background: var(--bg); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: var(--font-data); font-size: .9em; }
+
+/* Encabezado */
+header.top { padding-block: 32px 20px; }
+.topbar { display: flex; justify-content: space-between; align-items: start; gap: 12px; flex-wrap: wrap; }
+
+/* Panel de apariencia */
+.look { position: relative; }
+.look > summary { list-style: none; font-size: 13px; font-weight: 600; color: var(--ink); border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px 6px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; }
+.look > summary::-webkit-details-marker { display: none; }
+.look > summary .sw3 { display: inline-flex; }
+.look > summary .sw3 i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--surface); margin-left: -5px; }
+.look > summary .sw3 i:first-child { margin-left: 0; }
+.look[open] > summary { border-color: var(--ink); }
+.lookpanel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 1100; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 12px 32px rgba(0,0,0,.18); padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.lookpanel h3 { font-size: 11px; font-family: var(--font-body); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.preset { font: inherit; font-size: 13px; text-align: left; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+.preset:hover { border-color: var(--muted); }
+.preset[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+.preset .strip { display: flex; height: 10px; gap: 2px; }
+.preset .strip span { flex: 1; border-radius: 2px; }
+.custom { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.custom label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.custom input[type="color"] { width: 32px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; cursor: pointer; flex: none; }
+.lookfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.eyebrow { font-family: var(--font-data); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+header.top h1 { font-size: clamp(30px, 5vw, 54px); font-weight: 800; font-stretch: 72%; line-height: .98; letter-spacing: -.01em; margin-top: 10px; max-width: 22ch; }
+header.top h1 span { color: var(--accent); }
+.lede { max-width: 66ch; color: var(--ink-2); margin: 14px 0 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+
+/* Filtros */
+.filters { background: var(--bg); border-block: 1px solid var(--line); padding-block: 12px; z-index: 900; }
+@media (min-width: 900px) { .filters { position: sticky; top: env(safe-area-inset-top, 0px); } }
+.frow { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.f { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.f label, .lab { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+select, input[type="search"], input[type="text"] {
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 7px 10px; min-height: 36px; max-width: 100%;
+}
+#f-con { width: 230px; }
+#f-mun, #f-sec, #f-ale { width: 170px; }
+#f-desde, #f-hasta { width: 86px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 6px 11px; cursor: pointer; min-height: 36px; }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+.chip[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); font-weight: 600; background: var(--neutral-soft); }
+.btn-reset { font: inherit; font-size: 13px; background: none; border: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px 4px; min-height: 36px; }
+.active-note { font-size: 13px; color: var(--ink-2); margin-top: 8px; min-height: 20px; }
+
+/* Inversión */
+.inv { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.6fr); gap: 16px; margin-top: 20px; }
+@media (max-width: 900px) { .inv { grid-template-columns: minmax(0, 1fr); } }
+.hero { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.hero .big { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(40px, 5.4vw, 64px); line-height: .95; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.hero .big small { font-size: .42em; font-weight: 700; color: var(--ink-2); margin-left: 4px; }
+.hero .cap { font-size: 13.5px; color: var(--ink-2); max-width: 40ch; }
+.hero .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+.hero .pair .v { font-family: var(--font-display); font-weight: 700; font-stretch: 85%; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.hero .pair .s { font-size: 12.5px; color: var(--muted); }
+.munis { display: flex; flex-direction: column; min-width: 0; }
+.mrow { font: inherit; color: var(--ink); text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); cursor: pointer; width: 100%;
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, .7fr); gap: 14px; align-items: center; padding: 12px 8px; }
+.mrow:last-child { border-bottom: 0; }
+.mrow:hover { background: var(--neutral-soft); }
+.mrow[aria-pressed="true"] { background: var(--accent-soft); }
+.mrow.dim { opacity: .5; }
+.mrow .name { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-stretch: 85%; font-size: 18px; min-width: 0; }
+.mrow .name i { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.mrow .tot { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.mrow .tot b { font-family: var(--font-data); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; }
+.mrow .share { height: 8px; background: var(--neutral-soft); border-radius: 4px; overflow: hidden; }
+.mrow .share span { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.mrow .pc b, .mrow .pob b { font-family: var(--font-data); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; display: block; }
+.mrow small { font-size: 12px; color: var(--muted); }
+.munihead { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, .7fr); gap: 14px; padding: 0 8px 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+@media (max-width: 620px) {
+  .munihead { display: none; }
+  .mrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mrow .name { grid-column: 1 / -1; }
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; border: 0; background: var(--surface); color: var(--ink-2); padding: 6px 12px; cursor: pointer; min-height: 34px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.cardhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 16px; height: 3px; border-radius: 2px; }
+
+/* KPIs */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin-top: 16px; }
+.kpi { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi .v { font-family: var(--font-display); font-weight: 700; font-stretch: 85%; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi .s { font-size: 12.5px; color: var(--muted); }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Rejilla */
+.grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .grid, .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
+.card h2 { font-size: 19px; font-weight: 700; font-stretch: 90%; }
+.card .sub { font-size: 13px; color: var(--muted); margin: 2px 0 12px; }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.mt { margin-top: 16px; }
+
+/* Mapa */
+.mapcard { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.mapcard .head { padding: 16px 16px 10px; }
+#map { height: 480px; background: #1d2a24; }
+@media (max-width: 900px) { #map { height: 360px; } }
+.leaflet-container { font-family: var(--font-body); }
+.mun-label { font-family: var(--font-display); font-weight: 700; font-stretch: 80%; font-size: 13px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 8px rgba(0,0,0,.6); white-space: nowrap; text-align: center; line-height: 1.15; pointer-events: none; }
+.mun-label small { display: block; font-family: var(--font-data); font-weight: 500; font-size: 11px; }
+.maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 16px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line); }
+.maplegend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); vertical-align: -2px; margin-right: 5px; }
+.maplegend b { font-weight: 600; }
+
+/* Barras horizontales */
+.hbars { display: flex; flex-direction: column; gap: 4px; }
+.hb { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto; gap: 10px; align-items: center; font: inherit; font-size: 13.5px; text-align: left; background: none; border: 0; color: var(--ink); padding: 5px 4px; border-radius: 4px; cursor: pointer; width: 100%; }
+.hb:hover { background: var(--neutral-soft); }
+.hb[aria-pressed="true"] { background: var(--accent-soft); }
+.hb .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb .track { height: 12px; position: relative; }
+.hb .bar { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
+.hb.dim .bar { opacity: .35; }
+.hb .val { font-family: var(--font-data); font-size: 12.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 520px) { .hb { grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) auto; } }
+
+/* Estado */
+.estbar { display: flex; height: 18px; gap: 2px; margin: 4px 0 12px; }
+.estbar div { height: 100%; min-width: 2px; }
+.estbar div:first-child { border-radius: 4px 0 0 4px; }
+.estbar div:last-child { border-radius: 0 4px 4px 0; }
+.estlist { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 14px; font-size: 13.5px; align-items: center; }
+.estlist .k { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.estlist .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.estlist .c, .estlist .m { font-family: var(--font-data); font-size: 12.5px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.estbtn { font: inherit; font-size: 13.5px; display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; color: var(--ink); padding: 2px 4px; border-radius: 4px; cursor: pointer; min-height: 28px; }
+.estbtn:hover { background: var(--neutral-soft); }
+.estbtn[aria-pressed="true"] { font-weight: 700; background: var(--neutral-soft); }
+
+/* Gráficos SVG */
+.svgchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.svgchart .ax { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+.svgchart .lbl { fill: var(--ink-2); font-family: var(--font-data); font-size: 11px; }
+.svgchart .elbl { font-family: var(--font-display); font-weight: 700; font-size: 13px; fill: var(--ink); }
+.svgchart .grid-l { stroke: var(--line); stroke-width: 1; }
+.svgchart .base-l { stroke: var(--muted); stroke-width: 1; }
+.svgchart .b { fill: var(--accent); }
+.svgchart .b.dim { opacity: .35; }
+.svgchart .cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+
+/* Alertas */
+.alerts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .alerts { grid-template-columns: minmax(0, 1fr); } }
+.al { font: inherit; text-align: left; border: 1px solid var(--line); border-left: 4px solid var(--warning); background: var(--surface); border-radius: var(--r); padding: 12px 14px; cursor: pointer; color: var(--ink); display: flex; flex-direction: column; gap: 4px; }
+.al.crit { border-left-color: var(--critical); }
+.al.neu { border-left-color: var(--neutral); }
+.al[aria-pressed="true"] { background: var(--warn-soft); }
+.al.crit[aria-pressed="true"] { background: var(--crit-soft); }
+.al.neu[aria-pressed="true"] { background: var(--neutral-soft); }
+.al .t { font-weight: 700; font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
+.al .t .num { font-family: var(--font-display); font-size: 24px; font-stretch: 85%; }
+.al .d { font-size: 13px; color: var(--ink-2); }
+
+/* Tabla */
+.tablehead { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: end; margin-bottom: 10px; }
+#q { width: 300px; }
+.tscroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); }
+table { border-collapse: collapse; width: 100%; min-width: 980px; font-size: 13px; background: var(--surface); }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); }
+th button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; letter-spacing: inherit; text-transform: inherit; }
+th[aria-sort] button { color: var(--ink); }
+td.r, th.r { text-align: right; }
+td.mono { font-family: var(--font-data); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.obj { max-width: 380px; color: var(--ink-2); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.p-ter { background: var(--ok-soft); color: var(--good); }
+.p-eje { background: var(--accent-soft); color: var(--accent); }
+.p-ven { background: var(--warn-soft); color: var(--warning); }
+.p-con { background: var(--neutral-soft); color: var(--ink-2); }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin: 0 4px 4px 0; background: var(--warn-soft); color: var(--ink); white-space: nowrap; }
+.tag.crit { background: var(--crit-soft); }
+.tag.neu { background: var(--neutral-soft); }
+.pager { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.pager button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r); padding: 6px 12px; cursor: pointer; min-height: 34px; }
+.pager button:disabled { opacity: .4; cursor: default; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+
+/* Metodología */
+section.method { margin-top: 28px; padding-block: 24px 36px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 900px) { section.method { grid-template-columns: minmax(0, 1fr); } }
+section.method h3 { font-size: 16px; font-weight: 700; font-stretch: 90%; margin-bottom: 6px; }
+section.method p, section.method li { font-size: 13.5px; color: var(--ink-2); max-width: 62ch; }
+section.method ul { padding-left: 18px; margin: 0; }
+footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
+
+/* Tooltip */
+#tip { position: fixed; z-index: 2000; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,.16); max-width: 300px; }
+#tip strong { display: block; font-family: var(--font-display); font-size: 17px; font-stretch: 85%; }
+#tip .row { color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+#tip .row i { width: 12px; height: 3px; border-radius: 2px; flex: none; }
+#tip .row b { color: var(--ink); font-family: var(--font-data); font-weight: 500; }
+.leaflet-tooltip.mtip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 6px 20px rgba(0,0,0,.2); font-family: var(--font-body); font-size: 12.5px; padding: 8px 10px; }
+.leaflet-tooltip.mtip strong { font-family: var(--font-display); font-size: 16px; }
+
+@media (prefers-reduced-motion: no-preference) { .bar, .estbar div, .share span { transition: width .35s ease; } }
+</style>
+
+<header class="top wrap">
+  <div class="topbar">
+    <div class="eyebrow">Observatorio de Obras Públicas · Pacífico caucano</div>
+    <details class="look" id="look">
+      <summary><span class="sw3" aria-hidden="true"><i style="background:var(--m1)"></i><i style="background:var(--m2)"></i><i style="background:var(--m3)"></i></span>Apariencia</summary>
+      <div class="lookpanel">
+        <div>
+          <h3>Paleta</h3>
+          <div class="presets" id="presets"></div>
+        </div>
+        <div>
+          <h3>Colores propios</h3>
+          <div class="custom">
+            <label for="c-m1"><input type="color" id="c-m1">Guapi</label>
+            <label for="c-m2"><input type="color" id="c-m2">Timbiquí</label>
+            <label for="c-m3"><input type="color" id="c-m3">López de Micay</label>
+            <label for="c-accent"><input type="color" id="c-accent">Barras y acentos</label>
+          </div>
+        </div>
+        <div>
+          <h3>Modo</h3>
+          <div class="lookfoot">
+            <div class="seg" role="group" aria-label="Modo de color">
+              <button type="button" data-modo="auto">Automático</button>
+              <button type="button" data-modo="light">Claro</button>
+              <button type="button" data-modo="dark">Oscuro</button>
+            </div>
+            <button type="button" class="btn-reset" id="look-reset">Restablecer</button>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <h1>¿Cuánto se invierte en obra pública en <span>Guapi, Timbiquí y López de Micay</span>?</h1>
+  <p class="lede">Todos los contratos de obra que las entidades de estos tres municipios publicaron en SECOP I y SECOP II desde 2022. Filtra por municipio, contratista, tipo de obra o estado. También puedes hacer clic en el mapa o en cualquier barra para filtrar.</p>
+  <div class="meta"><span id="m-corte"></span><span>Fuentes: SECOP I y II (datos.gov.co) · Población: DANE</span><span>Pesos colombianos · M = millones</span></div>
+</header>
+
+<div class="filters">
+  <div class="wrap">
+    <div class="frow">
+      <div class="f"><label for="f-mun">Municipio</label><select id="f-mun"></select></div>
+      <div class="f"><label for="f-con">Contratista</label><input id="f-con" type="text" list="l-con" placeholder="Todos" autocomplete="off"><datalist id="l-con"></datalist></div>
+      <div class="f"><label for="f-sec">Tipo de obra</label><select id="f-sec"></select></div>
+      <div class="f"><label for="f-desde">Desde</label><select id="f-desde"></select></div>
+      <div class="f"><label for="f-hasta">Hasta</label><select id="f-hasta"></select></div>
+      <div class="f"><label for="f-ale">Alertas</label><select id="f-ale"></select></div>
+      <div class="f"><span class="lab">Estado</span><div class="chips" id="f-est"></div></div>
+      <button class="btn-reset" id="reset" type="button">Quitar filtros</button>
+    </div>
+    <div class="active-note" id="note" aria-live="polite"></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="inv" aria-label="Inversión">
+    <div class="hero">
+      <div>
+        <div class="lab">Inversión total en obra · Pacífico caucano</div>
+        <div class="big" id="inv-total"></div>
+        <div class="cap" id="inv-cap"></div>
+      </div>
+      <div class="pair">
+        <div><div class="v" id="inv-pc"></div><div class="s" id="inv-pc-s"></div></div>
+        <div><div class="v" id="inv-pob"></div><div class="s" id="inv-pob-s"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Inversión por municipio</h2>
+      <div class="sub">Haz clic en un municipio para filtrar todo el tablero</div>
+      <div class="munihead"><span>Municipio</span><span>Valor contratado</span><span>Por habitante</span><span>Habitantes</span></div>
+      <div class="munis" id="munis"></div>
+    </div>
+  </section>
+
+  <div class="card mt svgchart">
+    <div class="cardhead">
+      <div><h2>Línea de tiempo de la inversión</h2><div class="sub" id="tl-sub"></div></div>
+      <div class="seg" role="group" aria-label="Medida">
+        <button type="button" id="tl-total" aria-pressed="true">Valor total</button>
+        <button type="button" id="tl-pc" aria-pressed="false">Por habitante</button>
+      </div>
+    </div>
+    <div class="legend" id="tl-legend"></div>
+    <div id="timeline"></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card mapcard">
+      <div class="head">
+        <h2>Dónde se contrata</h2>
+        <div class="sub">Imagen satelital. El área de cada burbuja es el valor contratado. Haz clic en un municipio para filtrar.</div>
+      </div>
+      <div id="map" role="region" aria-label="Mapa satelital de los tres municipios"></div>
+      <div class="maplegend" id="maplegend"></div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <h2>Estado de las obras</h2>
+        <div class="sub">Según SECOP y la fecha de fin del contrato</div>
+        <div class="estbar" id="estbar" aria-hidden="true"></div>
+        <div class="estlist" id="estlist"></div>
+      </div>
+      <div class="card">
+        <h2>Tipo de obra</h2>
+        <div class="sub">Valor contratado por sector</div>
+        <div class="hbars" id="sectores"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card svgchart">
+      <h2>Contratos por año</h2>
+      <div class="sub" id="year-sub"></div>
+      <div id="years"></div>
+    </div>
+    <div class="card">
+      <h2>Contratistas con más valor</h2>
+      <div class="sub">Los 10 primeros. Entre paréntesis, el número de contratos</div>
+      <div class="hbars" id="contratistas"></div>
+    </div>
+  </div>
+
+  <div class="card mt">
+    <h2>Alertas para revisar</h2>
+    <div class="sub">Son señales para mirar con más cuidado, no pruebas de irregularidad. Haz clic en una para ver esos contratos.</div>
+    <div class="alerts" id="alerts"></div>
+  </div>
+
+  <div class="card mt">
+    <div class="tablehead">
+      <div><h2>Contratos</h2><div class="sub" id="t-sub" style="margin-bottom:0"></div></div>
+      <div class="f"><label for="q">Buscar en la descripción</label><input id="q" type="search" placeholder="acueducto, quebrada, aula…"></div>
+    </div>
+    <div class="tscroll"><table>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+    <div class="pager"><span id="pinfo"></span><button type="button" id="prev">Anterior</button><button type="button" id="next">Siguiente</button></div>
+  </div>
+
+  <section class="method">
+    <div>
+      <h3>De dónde salen los datos</h3>
+      <p>Contratos de tipo <em>obra</em> publicados en SECOP II (<code>jbjy-vk9h</code>) y SECOP I (<code>f789-7hwg</code>) en datos.gov.co por entidades de Guapi, Timbiquí y López de Micay, firmados desde 2022 hasta la fecha de corte. La población viene de las proyecciones municipales 2018–2042 del DANE, basadas en el Censo 2018.</p>
+    </div>
+    <div>
+      <h3>Cómo se calculó</h3>
+      <ul>
+        <li><b>Inversión</b> es el valor firmado de los contratos, no lo pagado.</li>
+        <li><b>Por habitante</b> divide el valor de cada año por la población DANE de ese año. Para un rango de años, se suman los valores anuales por habitante.</li>
+        <li>El municipio se corrige cuando la descripción nombra solo uno de los tres, y los nombres de un mismo contratista se unen en uno.</li>
+        <li>Estado: <b>Terminada</b> significa liquidada. <b>Plazo vencido</b> significa que la fecha de fin ya pasó y el contrato no figura liquidado. <b>En contratación</b> es un proceso abierto que todavía no tiene contrato.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Límites</h3>
+      <p>El mapa ubica cada contrato en la cabecera de su municipio porque SECOP no publica coordenadas de las obras. Las adiciones de valor no aparecen porque estas fuentes no las publican para estos municipios. Las alertas son reglas automáticas, y cada caso debe verificarse en el enlace a SECOP.</p>
+    </div>
+  </section>
+</main>
+<footer class="wrap">
+  <div>Proyecto de análisis de datos de Jerson Sinisterra · Python, pandas, DuckDB y Leaflet · Imágenes satelitales: Esri, Maxar, Earthstar Geographics · Límites municipales: © colaboradores de OpenStreetMap</div>
+</footer>
+<div id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DATA = /*__DATOS__*/;
+const TILES = /*__TILES__*/;
+
+/* ---------- utilidades ---------- */
+const $ = (id) => document.getElementById(id);
+const nf = new Intl.NumberFormat("es-CO");
+const M = (v) => "$" + nf.format(Math.round(v / 1e6)) + " M";
+const P = (v) => "$" + nf.format(Math.round(v));
+const pct = (a, b) => (b ? Math.round((100 * a) / b) : 0) + " %";
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+const groupBy = (arr, f) => { const m = new Map(); for (const x of arr) { const k = f(x); if (!m.has(k)) m.set(k, []); m.get(k).push(x); } return m; };
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ns = "http://www.w3.org/2000/svg";
+const mk = (t, a) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+function niceStep(x) { const p = Math.pow(10, Math.floor(Math.log10(x || 1))); const m = x / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+
+const C = DATA.contratos;
+const MUN = DATA.municipios;
+const MUNBY = Object.fromEntries(MUN.map((m) => [m.nombre, m]));
+const POB = DATA.poblacion;                      // POB[municipio][anio]
+const ESTADOS = [
+  { k: "En ejecución", cls: "p-eje", color: "--accent" },
+  { k: "Plazo vencido", cls: "p-ven", color: "--warning" },
+  { k: "Terminada", cls: "p-ter", color: "--good" },
+  { k: "En contratación", cls: "p-con", color: "--neutral" },
+];
+const ALERTAS = {
+  objeto_repetido: { t: "Obra repetida", d: "El mismo tipo de obra contratado 5 veces o más en el mismo municipio y año. Puede ser un contrato grande partido en varios.", cls: "" },
+  valor_atipico: { t: "Valor atípico", d: "Vale más de 20 veces una obra típica (la mediana) de su municipio.", cls: "crit" },
+  sin_firmar: { t: "Sin contrato firmado", d: "En SECOP I figura como Convocado: se abrió el proceso pero no hay contrato.", cls: "neu" },
+  adicion_alta: { t: "Adición alta", d: "El valor subió más de 30 % con las adiciones.", cls: "crit" },
+};
+const alertKeys = Object.keys(ALERTAS).filter((k) => C.some((c) => c.alertas.includes(k)));
+
+/* ---------- estado de filtros ---------- */
+const anios = [...new Set(C.map((c) => c.anio))].sort();
+const A0 = anios[0], A1 = anios[anios.length - 1];
+const S = { mun: "", con: "", sec: "", desde: A0, hasta: A1, ale: "", est: new Set(), q: "", sort: { k: "fecha", dir: -1 }, page: 0, tl: "total" };
+try {
+  const saved = JSON.parse(localStorage.getItem("obs-filtros") || "null");
+  if (saved) Object.assign(S, saved, { est: new Set(saved.est || []), page: 0 });
+  if (!anios.includes(S.desde)) S.desde = A0; if (!anios.includes(S.hasta)) S.hasta = A1;
+} catch (e) {}
+const persist = () => { try { localStorage.setItem("obs-filtros", JSON.stringify({ ...S, est: [...S.est] })); } catch (e) {} };
+const yearsInRange = () => anios.filter((a) => a >= S.desde && a <= S.hasta);
+
+function pass(c, skip) {
+  if (skip !== "mun" && S.mun && c.municipio !== S.mun) return false;
+  if (skip !== "con" && S.con && c.contratista !== S.con) return false;
+  if (skip !== "sec" && S.sec && c.sector !== S.sec) return false;
+  if (skip !== "anio" && (c.anio < S.desde || c.anio > S.hasta)) return false;
+  if (skip !== "ale" && S.ale && !(S.ale === "*" ? c.alertas.length : c.alertas.includes(S.ale))) return false;
+  if (skip !== "est" && S.est.size && !S.est.has(c.estado)) return false;
+  return true;
+}
+/* Valor por habitante: suma, año por año, del valor dividido por la población DANE de ese año */
+function perCapita(rows, munNames) {
+  const by = groupBy(rows, (c) => c.anio);
+  let s = 0;
+  for (const a of yearsInRange()) {
+    const pob = sum(munNames, (m) => POB[m][a] || 0);
+    if (pob) s += sum(by.get(a) || [], (c) => c.valor) / pob;
+  }
+  return s;
+}
+
+/* ---------- controles ---------- */
+function fillSelect(sel, opts, all) {
+  sel.replaceChildren();
+  if (all) sel.append(new Option(all, ""));
+  for (const [v, t] of opts) sel.append(new Option(t, v));
+}
+fillSelect($("f-mun"), MUN.map((m) => [m.nombre, m.titulo]), "Todos");
+fillSelect($("f-sec"), [...new Set(C.map((c) => c.sector))].sort().map((s) => [s, s]), "Todos");
+fillSelect($("f-desde"), anios.map((a) => [a, a]));
+fillSelect($("f-hasta"), anios.map((a) => [a, a]));
+fillSelect($("f-ale"), [["*", "Con cualquier alerta"], ...alertKeys.map((k) => [k, ALERTAS[k].t])], "Todas");
+const CONTRATISTAS = [...new Set(C.map((c) => c.contratista))].sort();
+for (const n of CONTRATISTAS) $("l-con").append(new Option(n));
+for (const e of ESTADOS) {
+  const b = el("button", "chip"); b.type = "button"; b.dataset.k = e.k;
+  const d = el("span", "dot"); d.style.background = `var(${e.color})`;
+  b.append(d, document.createTextNode(e.k));
+  b.addEventListener("click", () => toggleEst(e.k));
+  $("f-est").append(b);
+}
+const toggleEst = (k) => { S.est.has(k) ? S.est.delete(k) : S.est.add(k); update(); };
+const bindSel = (id, key, num) => $(id).addEventListener("change", (ev) => {
+  S[key] = num ? +ev.target.value : ev.target.value;
+  if (S.desde > S.hasta) { if (key === "desde") S.hasta = S.desde; else S.desde = S.hasta; }
+  update();
+});
+bindSel("f-mun", "mun"); bindSel("f-sec", "sec"); bindSel("f-desde", "desde", true); bindSel("f-hasta", "hasta", true); bindSel("f-ale", "ale");
+$("f-con").addEventListener("change", (ev) => {
+  const v = ev.target.value.trim().toUpperCase();
+  const hit = CONTRATISTAS.find((n) => n.toUpperCase() === v);
+  S.con = hit || ""; if (!hit) ev.target.value = ""; update();
+});
+$("q").addEventListener("input", (ev) => { S.q = ev.target.value; S.page = 0; renderTable(); });
+$("reset").addEventListener("click", () => { Object.assign(S, { mun: "", con: "", sec: "", desde: A0, hasta: A1, ale: "", q: "", page: 0 }); S.est.clear(); $("q").value = ""; update(); });
+$("tl-total").addEventListener("click", () => { S.tl = "total"; persist(); renderTimeline(); });
+$("tl-pc").addEventListener("click", () => { S.tl = "pc"; persist(); renderTimeline(); });
+const toggle = (key, v) => { S[key] = S[key] === v ? "" : v; update(); };
+
+function syncControls() {
+  $("f-mun").value = S.mun; $("f-sec").value = S.sec; $("f-desde").value = S.desde; $("f-hasta").value = S.hasta; $("f-ale").value = S.ale; $("f-con").value = S.con;
+  for (const b of $("f-est").children) b.setAttribute("aria-pressed", S.est.has(b.dataset.k));
+  const parts = [];
+  if (S.mun) parts.push(MUNBY[S.mun].titulo);
+  if (S.con) parts.push(S.con);
+  if (S.sec) parts.push(S.sec);
+  if (S.est.size) parts.push([...S.est].join(" o "));
+  if (S.ale) parts.push(S.ale === "*" ? "con alertas" : ALERTAS[S.ale].t.toLowerCase());
+  if (S.desde !== A0 || S.hasta !== A1) parts.push(S.desde === S.hasta ? `${S.desde}` : `${S.desde}–${S.hasta}`);
+  $("note").textContent = parts.length ? "Viendo: " + parts.join(" · ") : "Viendo todos los contratos";
+  $("reset").hidden = !parts.length;
+}
+
+/* ---------- tooltip ---------- */
+const tip = $("tip");
+function showTip(ev, title, rows) {
+  tip.replaceChildren(el("strong", null, title), ...rows.map((r) => {
+    if (typeof r === "string") return el("div", "row", r);
+    const d = el("div", "row"); const i = el("i"); i.style.background = r.color; d.append(i, el("b", null, r.v), document.createTextNode(r.k)); return d;
+  }));
+  tip.hidden = false;
+  const x = Math.min(ev.clientX + 14, window.innerWidth - tip.offsetWidth - 8);
+  const y = ev.clientY - tip.offsetHeight - 12 < 8 ? ev.clientY + 18 : ev.clientY - tip.offsetHeight - 12;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+
+/* ---------- inversión ---------- */
+function renderInversion() {
+  const base = C.filter((c) => pass(c, "mun"));
+  const names = MUN.map((m) => m.nombre);
+  const total = sum(base, (c) => c.valor);
+  const ys = yearsInRange();
+  const rango = ys.length > 1 ? `${ys[0]}–${ys[ys.length - 1]}` : `${ys[0]}`;
+  const pobFin = sum(names, (m) => POB[m][ys[ys.length - 1]] || 0);
+  $("inv-total").replaceChildren(document.createTextNode("$" + nf.format(Math.round(total / 1e9 * 10) / 10)), el("small", null, "mil millones"));
+  $("inv-cap").textContent = `${nf.format(base.length)} contratos de obra firmados en ${rango} en los tres municipios de la costa del Cauca${ys[ys.length - 1] === DATA.anioCorte ? ` (${DATA.anioCorte} va hasta el ${DATA.corteTexto})` : ""}.`;
+  $("inv-pc").textContent = P(perCapita(base, names));
+  $("inv-pc-s").textContent = `invertidos por habitante en ${rango}`;
+  $("inv-pob").textContent = nf.format(pobFin);
+  $("inv-pob-s").textContent = `habitantes en ${ys[ys.length - 1]} (DANE)`;
+
+  const by = groupBy(base, (c) => c.municipio);
+  const maxV = Math.max(1, ...MUN.map((m) => sum(by.get(m.nombre) || [], (c) => c.valor)));
+  $("munis").replaceChildren(...MUN.map((m) => {
+    const rows = by.get(m.nombre) || [];
+    const v = sum(rows, (c) => c.valor);
+    const b = el("button", "mrow"); b.type = "button";
+    b.setAttribute("aria-pressed", S.mun === m.nombre);
+    if (S.mun && S.mun !== m.nombre) b.classList.add("dim");
+    const name = el("span", "name"); const dot = el("i"); dot.style.background = `var(${m.color})`; name.append(dot, document.createTextNode(m.titulo));
+    const tot = el("span", "tot"); const sh = el("span", "share"); const fill = el("span"); fill.style.width = (100 * v) / maxV + "%"; fill.style.background = `var(${m.color})`; sh.append(fill);
+    tot.append(el("b", null, M(v)), sh, el("small", null, `${pct(v, total)} del total · ${nf.format(rows.length)} contratos`));
+    const pc = el("span", "pc"); pc.append(el("b", null, P(perCapita(rows, [m.nombre]))), el("small", null, "por habitante"));
+    const pob = el("span", "pob"); pob.append(el("b", null, nf.format(POB[m.nombre][ys[ys.length - 1]] || 0)), el("small", null, `habitantes ${ys[ys.length - 1]}`));
+    b.append(name, tot, pc, pob);
+    b.addEventListener("click", () => toggle("mun", m.nombre));
+    return b;
+  }));
+}
+
+/* ---------- línea de tiempo por municipio ---------- */
+function renderTimeline() {
+  $("tl-total").setAttribute("aria-pressed", S.tl === "total"); $("tl-pc").setAttribute("aria-pressed", S.tl === "pc");
+  const base = C.filter((c) => pass(c, "mun"));
+  const ys = yearsInRange();
+  const series = MUN.map((m) => {
+    const rows = base.filter((c) => c.municipio === m.nombre);
+    return { m, pts: ys.map((a) => { const v = sum(rows.filter((c) => c.anio === a), (c) => c.valor); return { a, v: S.tl === "pc" ? v / (POB[m.nombre][a] || 1) : v, n: rows.filter((c) => c.anio === a).length }; }) };
+  });
+  const fmt = S.tl === "pc" ? P : M;
+  const W = 900, H = 280, padL = 70, padR = 130, padT = 16, padB = 28;
+  const max = Math.max(1, ...series.flatMap((s) => s.pts.map((p) => p.v)));
+  const step = niceStep(max / 4), top = Math.ceil(max / step) * step;
+  const x = (i) => padL + (ys.length === 1 ? (W - padL - padR) / 2 : (i * (W - padL - padR)) / (ys.length - 1));
+  const y = (v) => H - padB - ((H - padB - padT) * v) / top;
+  const svg = mk("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Inversión por municipio y año" });
+  for (let v = 0; v <= top + step / 2; v += step) {
+    svg.append(mk("line", { x1: padL, x2: W - padR, y1: y(v), y2: y(v), class: v ? "grid-l" : "base-l" }));
+    const t = mk("text", { x: padL - 8, y: y(v) + 4, "text-anchor": "end", class: "ax" });
+    t.textContent = v === 0 ? "0" : S.tl === "pc" ? "$" + nf.format(v / 1000) + " mil" : nf.format(v / 1e9) + " mil M";
+    svg.append(t);
+  }
+  ys.forEach((a, i) => { const t = mk("text", { x: x(i), y: H - 8, "text-anchor": "middle", class: "ax" }); t.textContent = a + (a === DATA.anioCorte ? "*" : ""); svg.append(t); });
+  // líneas y etiquetas directas al final (se separan si chocan)
+  const ends = [];
+  for (const s of series) {
+    const col = cssVar(s.m.color);
+    const dim = S.mun && S.mun !== s.m.nombre;
+    const d = s.pts.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.v)}`).join(" ");
+    svg.append(mk("path", { d, fill: "none", stroke: col, "stroke-width": S.mun === s.m.nombre ? 3 : 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: dim ? .3 : 1 }));
+    s.pts.forEach((p, i) => svg.append(mk("circle", { cx: x(i), cy: y(p.v), r: i === s.pts.length - 1 ? 4.5 : 3, fill: col, stroke: cssVar("--surface"), "stroke-width": 2, opacity: dim ? .3 : 1 })));
+    ends.push({ s, y: y(s.pts[s.pts.length - 1].v), col, dim });
+  }
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 30) ends[i].y = ends[i - 1].y + 30;
+  for (const e of ends) {
+    const last = e.s.pts[e.s.pts.length - 1];
+    const t = mk("text", { x: W - padR + 12, y: e.y - 2, class: "elbl", opacity: e.dim ? .4 : 1 }); t.textContent = e.s.m.titulo;
+    const t2 = mk("text", { x: W - padR + 12, y: e.y + 13, class: "lbl", opacity: e.dim ? .4 : 1 }); t2.textContent = fmt(last.v);
+    svg.append(t, t2);
+  }
+  // capa de hover: la cruz busca el año más cercano
+  const cross = mk("line", { y1: padT, y2: H - padB, class: "cross", visibility: "hidden" });
+  const hit = mk("rect", { x: padL - 20, y: padT, width: W - padL - padR + 40, height: H - padT - padB, fill: "transparent", tabindex: 0, "aria-label": "Recorre los años con las flechas" });
+  svg.append(cross, hit);
+  let idx = ys.length - 1;
+  const showAt = (i, ev) => {
+    idx = i; cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+    const a = ys[i];
+    const rows = series.map((s) => ({ color: cssVar(s.m.color), v: fmt(s.pts[i].v), k: ` ${s.m.titulo} · ${s.pts[i].n} contratos` })).sort((p, q) => 0);
+    const tot = sum(series, (s) => s.pts[i].v);
+    showTip(ev, `${a}${a === DATA.anioCorte ? " (hasta el corte)" : ""}`, [...rows, S.tl === "total" ? `Total: ${M(tot)}` : "Valor del año ÷ habitantes del año"]);
+  };
+  const near = (ev) => { const r = svg.getBoundingClientRect(); const px = ((ev.clientX - r.left) / r.width) * W; let best = 0; ys.forEach((_, i) => { if (Math.abs(x(i) - px) < Math.abs(x(best) - px)) best = i; }); return best; };
+  hit.addEventListener("pointermove", (ev) => showAt(near(ev), ev));
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+  const kbd = () => { const r = svg.getBoundingClientRect(); return { clientX: r.left + (x(idx) / W) * r.width, clientY: r.top + 30 }; };
+  hit.addEventListener("focus", () => showAt(idx, kbd()));
+  hit.addEventListener("blur", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+  hit.addEventListener("keydown", (ev) => { if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") { ev.preventDefault(); idx = Math.max(0, Math.min(ys.length - 1, idx + (ev.key === "ArrowRight" ? 1 : -1))); showAt(idx, kbd()); } });
+  $("timeline").replaceChildren(svg);
+  $("tl-legend").replaceChildren(...MUN.map((m) => { const s = el("span"); const i = el("i"); i.style.background = `var(${m.color})`; s.append(i, document.createTextNode(m.titulo)); return s; }));
+  $("tl-sub").textContent = (S.tl === "pc" ? "Pesos invertidos por habitante cada año" : "Valor contratado cada año") + (ys.includes(DATA.anioCorte) ? ` · *${DATA.anioCorte} va hasta el ${DATA.corteTexto}` : "");
+}
+
+/* ---------- KPIs ---------- */
+function renderKpis(F) {
+  const eje = F.filter((c) => c.estado === "En ejecución").length;
+  const ter = F.filter((c) => c.estado === "Terminada").length;
+  const ven = F.filter((c) => c.estado === "Plazo vencido").length;
+  const conA = F.filter((c) => c.alertas.length).length;
+  const items = [
+    [nf.format(F.length), `contratos · ${nf.format(new Set(F.map((c) => c.contratista)).size)} contratistas`],
+    [nf.format(eje), `en ejecución · ${pct(eje, F.length)}`],
+    [nf.format(ter + ven), `terminadas o con plazo vencido · ${nf.format(ven)} sin liquidar`],
+    [nf.format(conA), `con al menos una alerta · ${pct(conA, F.length)}`],
+  ];
+  $("kpis").replaceChildren(...items.map(([v, s]) => { const d = el("div", "kpi"); d.append(el("div", "v", v), el("div", "s", s)); return d; }));
+}
+
+/* ---------- mapa ---------- */
+let map, polys = {}, bubbles = {}, labels = {};
+function initMap() {
+  if (!window.L) { $("map").replaceChildren(el("div", "empty", "El mapa no pudo cargar. Revisa la conexión y recarga la página.")); return; }
+  const b = DATA.bounds;
+  map = L.map("map", { scrollWheelZoom: false, minZoom: 9, maxZoom: 13, maxBounds: [[b[1] - .3, b[0] - .4], [b[3] + .3, b[2] + .4]] });
+  const attr = "Imágenes © Esri, Maxar, Earthstar Geographics · Límites © OpenStreetMap";
+  const blank = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+  if (TILES && Object.keys(TILES).length) {
+    const Embedded = L.TileLayer.extend({ getTileUrl: (c) => TILES[`${c.z}/${c.x}/${c.y}`] || blank });
+    new Embedded("", { maxNativeZoom: DATA.maxTileZoom, maxZoom: 13, attribution: attr }).addTo(map);
+  } else {
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 13, attribution: attr }).addTo(map);
+  }
+  for (const m of MUN) {
+    const p = L.geoJSON(m.geometria, { style: () => ({ color: "#ffffff", weight: 1.5, opacity: .9, fillColor: "#ffffff", fillOpacity: .06 }) }).addTo(map);
+    p.on("click", () => toggle("mun", m.nombre));
+    p.on("mouseover", () => p.setStyle({ weight: 3 }));
+    p.on("mouseout", () => p.setStyle({ weight: S.mun === m.nombre ? 3 : 1.5 }));
+    polys[m.nombre] = p;
+    const c = L.circleMarker([m.lat, m.lon], { radius: 10, color: "#ffffff", weight: 2, fillColor: cssVar(m.color), fillOpacity: .9 }).addTo(map);
+    c.on("click", () => toggle("mun", m.nombre));
+    bubbles[m.nombre] = c;
+    labels[m.nombre] = L.marker([m.lat, m.lon], { interactive: false, icon: L.divIcon({ className: "", html: "" }) }).addTo(map);
+  }
+  map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [10, 10] });
+  new ResizeObserver(() => map.invalidateSize()).observe($("map"));
+}
+function renderMap() {
+  const base = C.filter((c) => pass(c, "mun"));
+  const by = groupBy(base, (c) => c.municipio);
+  const total = sum(base, (c) => c.valor);
+  const maxV = Math.max(1, ...MUN.map((m) => sum(by.get(m.nombre) || [], (c) => c.valor)));
+  $("maplegend").replaceChildren(...MUN.map((m) => {
+    const v = sum(by.get(m.nombre) || [], (c) => c.valor);
+    const s = el("span"); const i = el("i"); i.style.background = `var(${m.color})`;
+    s.append(i, el("b", null, m.titulo), document.createTextNode(` ${pct(v, total)} del valor`)); return s;
+  }));
+  if (!map) return;
+  for (const m of MUN) {
+    const rows = by.get(m.nombre) || [];
+    const v = sum(rows, (c) => c.valor);
+    const sel = S.mun === m.nombre, dim = S.mun && !sel;
+    bubbles[m.nombre].setRadius(rows.length ? 8 + 34 * Math.sqrt(v / maxV) : 0);
+    bubbles[m.nombre].setStyle({ fillOpacity: dim ? .35 : .9, fillColor: cssVar(m.color) });
+    polys[m.nombre].setStyle({ weight: sel ? 3 : 1.5, fillOpacity: sel ? .16 : .06, opacity: dim ? .5 : .9 });
+    const eje = rows.filter((c) => c.estado === "En ejecución").length;
+    const tt = `<strong>${m.titulo}</strong><br>${nf.format(rows.length)} contratos · ${M(v)}<br>${nf.format(eje)} en ejecución<br><span style="opacity:.7">Clic para ${sel ? "quitar el filtro" : "filtrar"}</span>`;
+    bubbles[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", direction: "top", offset: [0, -8] });
+    polys[m.nombre].unbindTooltip().bindTooltip(tt, { className: "mtip", sticky: true });
+    labels[m.nombre].setIcon(L.divIcon({ className: "", html: `<div class="mun-label">${m.titulo}<small>${nf.format(rows.length)} · ${M(v)}</small></div>`, iconSize: [160, 34], iconAnchor: [80, -16 - 34 * Math.sqrt(v / maxV) * .6] }));
+  }
+}
+
+/* ---------- estado ---------- */
+function renderEstado() {
+  const base = C.filter((c) => pass(c, "est"));
+  const by = groupBy(base, (c) => c.estado);
+  const n = base.length || 1;
+  $("estbar").replaceChildren(...ESTADOS.filter((e) => by.get(e.k)).map((e) => { const d = el("div"); d.style.width = (100 * by.get(e.k).length) / n + "%"; d.style.background = `var(${e.color})`; if (S.est.size && !S.est.has(e.k)) d.style.opacity = .3; return d; }));
+  const out = [];
+  for (const e of ESTADOS) {
+    const rows = by.get(e.k) || [];
+    const k = el("div", "k"); const sw = el("span", "sw"); sw.style.background = `var(${e.color})`;
+    const b = el("button", "estbtn"); b.type = "button";
+    b.setAttribute("aria-pressed", S.est.has(e.k)); b.append(sw, document.createTextNode(e.k));
+    b.addEventListener("click", () => toggleEst(e.k));
+    k.append(b);
+    out.push(k, el("div", "c", `${nf.format(rows.length)} · ${pct(rows.length, base.length)}`), el("div", "m", M(sum(rows, (c) => c.valor))));
+  }
+  $("estlist").replaceChildren(...out);
+}
+
+/* ---------- barras horizontales ---------- */
+function hbars(target, rows, key, labelFn) {
+  if (!rows.length) { target.replaceChildren(el("div", "empty", "No hay contratos con estos filtros.")); return; }
+  const max = Math.max(1, ...rows.map((r) => r.v));
+  target.replaceChildren(...rows.map((r) => {
+    const b = el("button", "hb"); b.type = "button";
+    b.setAttribute("aria-pressed", S[key] === r.k);
+    if (S[key] && S[key] !== r.k) b.classList.add("dim");
+    const tr = el("span", "track"); const bar = el("span", "bar"); bar.style.width = (100 * r.v) / max + "%"; tr.append(bar);
+    b.append(el("span", "n", labelFn ? labelFn(r) : r.k), tr, el("span", "val", M(r.v)));
+    b.addEventListener("click", () => toggle(key, r.k));
+    b.addEventListener("pointermove", (ev) => showTip(ev, M(r.v), [r.k, `${nf.format(r.n)} contratos`, `Clic para ${S[key] === r.k ? "quitar el filtro" : "filtrar"}`]));
+    b.addEventListener("pointerleave", hideTip);
+    return b;
+  }));
+}
+const agg = (F, f) => [...groupBy(F, f)].map(([k, r]) => ({ k, v: sum(r, (c) => c.valor), n: r.length })).sort((a, b) => b.v - a.v);
+
+/* ---------- contratos por año ---------- */
+function renderYears() {
+  const base = C.filter((c) => pass(c, "anio"));
+  const W = 600, H = 240, padL = 40, padB = 26, padT = 22;
+  const data = anios.map((a) => { const r = base.filter((c) => c.anio === a); return { a, v: sum(r, (c) => c.valor), n: r.length }; });
+  const max = Math.max(1, ...data.map((d) => d.n));
+  const step = niceStep(max / 4), top = Math.ceil(max / step) * step;
+  const y = (v) => H - padB - ((H - padB - padT) * v) / top;
+  const bw = (W - padL) / data.length;
+  const svg = mk("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Contratos por año: " + data.map((d) => `${d.a}: ${d.n}`).join(", ") });
+  for (let v = 0; v <= top + step / 2; v += step) {
+    svg.append(mk("line", { x1: padL, x2: W, y1: y(v), y2: y(v), class: v ? "grid-l" : "base-l" }));
+    const t = mk("text", { x: padL - 8, y: y(v) + 4, "text-anchor": "end", class: "ax" }); t.textContent = nf.format(v); svg.append(t);
+  }
+  const ranged = S.desde !== A0 || S.hasta !== A1;
+  data.forEach((d, i) => {
+    const x = padL + i * bw + bw * .22, w = bw * .56, h = H - padB - y(d.n), r = Math.min(4, h);
+    const p = mk("path", { d: h > 0 ? `M${x},${H - padB} V${y(d.n) + r} Q${x},${y(d.n)} ${x + r},${y(d.n)} H${x + w - r} Q${x + w},${y(d.n)} ${x + w},${y(d.n) + r} V${H - padB} Z` : "", class: "b" });
+    const inRange = d.a >= S.desde && d.a <= S.hasta;
+    if (ranged && !inRange) p.classList.add("dim");
+    const label = mk("text", { x: x + w / 2, y: y(d.n) - 6, "text-anchor": "middle", class: "lbl" }); label.textContent = d.n ? nf.format(d.n) : "";
+    const ax = mk("text", { x: x + w / 2, y: H - 8, "text-anchor": "middle", class: "ax" }); ax.textContent = d.a + (d.a === DATA.anioCorte ? "*" : "");
+    const hit = mk("rect", { x: padL + i * bw, y: padT - 10, width: bw, height: H - padB - padT + 10, fill: "transparent", tabindex: 0, style: "cursor:pointer" });
+    const solo = S.desde === d.a && S.hasta === d.a;
+    const tipFn = (ev) => showTip(ev, `${nf.format(d.n)} contratos`, [`${d.a}${d.a === DATA.anioCorte ? " (hasta el corte)" : ""}`, `${M(d.v)} contratados`, `Clic para ${solo ? "ver todos los años" : "ver solo " + d.a}`]);
+    hit.addEventListener("pointermove", tipFn); hit.addEventListener("pointerleave", hideTip);
+    hit.addEventListener("focus", () => { const rr = hit.getBoundingClientRect(); tipFn({ clientX: rr.left + rr.width / 2, clientY: rr.top + 40 }); }); hit.addEventListener("blur", hideTip);
+    const pick = () => { if (solo) { S.desde = A0; S.hasta = A1; } else { S.desde = S.hasta = d.a; } update(); };
+    hit.addEventListener("click", pick); hit.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(); } });
+    svg.append(p, label, ax, hit);
+  });
+  $("years").replaceChildren(svg);
+  $("year-sub").textContent = `Haz clic en un año para ver solo ese año · *${DATA.anioCorte} va hasta el ${DATA.corteTexto}`;
+}
+
+/* ---------- alertas ---------- */
+function renderAlerts() {
+  const base = C.filter((c) => pass(c, "ale"));
+  $("alerts").replaceChildren(...alertKeys.map((k) => {
+    const rows = base.filter((c) => c.alertas.includes(k));
+    const a = ALERTAS[k];
+    const b = el("button", "al " + a.cls); b.type = "button"; b.setAttribute("aria-pressed", S.ale === k);
+    const t = el("div", "t"); t.append(el("span", "num", nf.format(rows.length)), el("span", null, a.t));
+    b.append(t, el("div", "d", a.d), el("div", "d", `${M(sum(rows, (c) => c.valor))} en total`));
+    b.addEventListener("click", () => toggle("ale", k));
+    return b;
+  }));
+}
+
+/* ---------- tabla ---------- */
+const COLS = [
+  { k: "fecha", t: "Firma", cls: "mono", get: (c) => c.fecha },
+  { k: "municipio", t: "Municipio", get: (c) => c.municipioTitulo },
+  { k: "objeto", t: "Qué se contrató", cls: "obj", nosort: true },
+  { k: "contratista", t: "Contratista", get: (c) => c.contratista },
+  { k: "sector", t: "Tipo", get: (c) => c.sector },
+  { k: "estado", t: "Estado", get: (c) => c.estado },
+  { k: "valor", t: "Valor", cls: "mono r", get: (c) => c.valor },
+  { k: "alertas", t: "Alertas", get: (c) => c.alertas.length },
+  { k: "url", t: "SECOP", nosort: true },
+];
+function renderHead() {
+  $("thead").replaceChildren(...COLS.map((col) => {
+    const th = el("th", col.cls && col.cls.includes("r") ? "r" : ""); th.scope = "col";
+    if (col.nosort) { th.textContent = col.t; return th; }
+    const b = el("button", null, col.t + (S.sort.k === col.k ? (S.sort.dir > 0 ? " ↑" : " ↓") : "")); b.type = "button";
+    if (S.sort.k === col.k) th.setAttribute("aria-sort", S.sort.dir > 0 ? "ascending" : "descending");
+    b.addEventListener("click", () => { S.sort = { k: col.k, dir: S.sort.k === col.k ? -S.sort.dir : (["valor", "fecha", "alertas"].includes(col.k) ? -1 : 1) }; renderHead(); renderTable(); });
+    th.append(b); return th;
+  }));
+}
+const PAGE = 25;
+const sinTildes = (s) => s.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+function renderTable() {
+  const q = sinTildes(S.q.trim());
+  const rows = C.filter((c) => pass(c) && (!q || c.objeto.includes(q)));
+  const col = COLS.find((c) => c.k === S.sort.k) || COLS[0];
+  rows.sort((a, b) => { const x = col.get(a), y = col.get(b); return (x > y ? 1 : x < y ? -1 : 0) * S.sort.dir; });
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  S.page = Math.min(S.page, pages - 1);
+  const est = Object.fromEntries(ESTADOS.map((e) => [e.k, e.cls]));
+  $("tbody").replaceChildren(...rows.slice(S.page * PAGE, S.page * PAGE + PAGE).map((c) => {
+    const tr = el("tr");
+    tr.append(el("td", "mono", c.fecha), el("td", null, c.municipioTitulo));
+    const o = el("td", "obj", c.objeto.length > 170 ? c.objeto.slice(0, 170) + "…" : c.objeto); o.title = c.objeto; tr.append(o);
+    tr.append(el("td", null, c.contratista), el("td", null, c.sector));
+    const tdE = el("td"); tdE.append(el("span", "pill " + est[c.estado], c.estado)); tr.append(tdE);
+    tr.append(el("td", "mono r", M(c.valor)));
+    const tdA = el("td"); for (const a of c.alertas) tdA.append(el("span", "tag " + ALERTAS[a].cls, ALERTAS[a].t)); tr.append(tdA);
+    const tdU = el("td");
+    if (c.url) { const a = el("a", null, "Ver ↗"); a.href = c.url; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Ver contrato en SECOP"); tdU.append(a); }
+    tr.append(tdU);
+    return tr;
+  }));
+  if (!rows.length) { const tr = el("tr"); const td = el("td", "empty", "Ningún contrato coincide. Prueba quitando algún filtro."); td.colSpan = COLS.length; tr.append(td); $("tbody").replaceChildren(tr); }
+  $("t-sub").textContent = `${nf.format(rows.length)} contratos · ${M(sum(rows, (c) => c.valor))}`;
+  $("pinfo").textContent = `Página ${S.page + 1} de ${pages}`;
+  $("prev").disabled = S.page === 0; $("next").disabled = S.page >= pages - 1;
+}
+$("prev").addEventListener("click", () => { S.page--; renderTable(); });
+$("next").addEventListener("click", () => { S.page++; renderTable(); });
+
+/* ---------- todo junto ---------- */
+function update() {
+  S.page = 0; persist(); syncControls(); hideTip();
+  const F = C.filter((c) => pass(c));
+  renderInversion(); renderTimeline(); renderKpis(F); renderMap(); renderEstado(); renderYears(); renderAlerts(); renderTable();
+  hbars($("sectores"), agg(C.filter((c) => pass(c, "sec")), (c) => c.sector), "sec");
+  hbars($("contratistas"), agg(C.filter((c) => pass(c, "con")), (c) => c.contratista).slice(0, 10), "con", (r) => `${r.k} (${r.n})`);
+}
+/* ---------- apariencia: paletas, colores propios y modo ---------- */
+// Cada paleta trae su versión clara y oscura: [acento, Guapi, Timbiquí, López de Micay]
+const PALETAS = {
+  rio:       { t: "Río",       light: ["#0e6977", "#2a78d6", "#eb6834", "#1baf7a"], dark: ["#4fb2bf", "#3987e5", "#d95926", "#199e70"] },
+  manglar:   { t: "Manglar",   light: ["#2f6b3a", "#2a78d6", "#e87ba4", "#eda100"], dark: ["#6fbf7a", "#3987e5", "#d55181", "#c98500"] },
+  atardecer: { t: "Atardecer", light: ["#9a4a1f", "#6250d6", "#eb6834", "#eda100"], dark: ["#e0895a", "#9085e9", "#d95926", "#c98500"] },
+  pizarra:   { t: "Pizarra",   light: ["#3b4a5a", "#2a78d6", "#6250d6", "#1baf7a"], dark: ["#9fb0c2", "#3987e5", "#9085e9", "#199e70"] },
+  coral:     { t: "Coral",     light: ["#1f5f8b", "#1baf7a", "#e87ba4", "#6250d6"], dark: ["#6aa9d6", "#199e70", "#d55181", "#9085e9"] },
+  tierra:    { t: "Tierra",    light: ["#6b5a2e", "#008300", "#eb6834", "#2a78d6"], dark: ["#c9b27a", "#2fa52f", "#d95926", "#3987e5"] },
+};
+const VARS = ["--accent", "--m1", "--m2", "--m3"];
+const LOOK0 = { paleta: "rio", modo: "auto", propios: {} };
+let LOOK = { ...LOOK0 };
+try { LOOK = { ...LOOK0, ...JSON.parse(localStorage.getItem("obs-apariencia") || "{}") }; if (!PALETAS[LOOK.paleta]) LOOK.paleta = "rio"; } catch (e) {}
+const root = document.documentElement;
+const isDark = () => root.dataset.theme === "dark" || (root.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+const lookColors = () => { const p = PALETAS[LOOK.paleta][isDark() ? "dark" : "light"]; return VARS.map((v, i) => LOOK.propios[v] || p[i]); };
+
+function applyLook(rerender) {
+  if (LOOK.modo === "auto") delete root.dataset.theme; else root.dataset.theme = LOOK.modo;
+  lookColors().forEach((c, i) => root.style.setProperty(VARS[i], c));
+  root.style.setProperty("--accent-soft", "color-mix(in srgb, var(--accent) 16%, var(--surface))");
+  for (const b of $("presets").children) b.setAttribute("aria-pressed", b.dataset.k === LOOK.paleta && !Object.keys(LOOK.propios).length);
+  VARS.forEach((v, i) => { $("c-" + v.slice(2)).value = lookColors()[i]; });
+  for (const b of document.querySelectorAll("[data-modo]")) b.setAttribute("aria-pressed", b.dataset.modo === LOOK.modo);
+  try { localStorage.setItem("obs-apariencia", JSON.stringify(LOOK)); } catch (e) {}
+  if (rerender) update();
+}
+for (const [k, p] of Object.entries(PALETAS)) {
+  const b = el("button", "preset"); b.type = "button"; b.dataset.k = k;
+  const strip = el("span", "strip");
+  for (const c of [p.light[1], p.light[2], p.light[3], p.light[0]]) { const s = el("span"); s.style.background = c; strip.append(s); }
+  b.append(strip, document.createTextNode(p.t));
+  b.addEventListener("click", () => { LOOK.paleta = k; LOOK.propios = {}; applyLook(true); });
+  $("presets").append(b);
+}
+VARS.forEach((v) => $("c-" + v.slice(2)).addEventListener("input", (ev) => { LOOK.propios[v] = ev.target.value; applyLook(true); }));
+for (const b of document.querySelectorAll("[data-modo]")) b.addEventListener("click", () => { LOOK.modo = b.dataset.modo; applyLook(true); });
+$("look-reset").addEventListener("click", () => { LOOK = { ...LOOK0, propios: {} }; applyLook(true); });
+document.addEventListener("click", (ev) => { if ($("look").open && !$("look").contains(ev.target)) $("look").open = false; });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") $("look").open = false; });
+
+$("m-corte").textContent = `Datos con corte al ${DATA.corteTexto}`;
+applyLook(false);
+initMap(); renderHead(); update();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyLook(true));
+new MutationObserver(() => { const want = LOOK.modo === "auto" ? undefined : LOOK.modo; if (root.dataset.theme !== want) { LOOK.modo = root.dataset.theme || "auto"; } lookColors().forEach((c, i) => root.style.setProperty(VARS[i], c)); renderMap(); renderTimeline(); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
