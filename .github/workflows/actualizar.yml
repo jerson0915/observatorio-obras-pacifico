@@ -1,9 +1,9 @@
-# Actualiza los datos de SECOP y publica el dashboard una vez al mes.
+# Actualiza los datos de SECOP y publica el dashboard una vez por semana.
 name: Actualizar dashboard
 
 on:
   schedule:
-    - cron: "0 11 1 * *"     # día 1 de cada mes, 6:00 a. m. hora de Colombia (11:00 UTC)
+    - cron: "0 11 * * 1"     # cada lunes, 6:00 a. m. hora de Colombia (11:00 UTC)
   workflow_dispatch:          # botón "Run workflow" para actualizar a mano
   push:
     branches: [main]          # si cambias algo a mano, solo se vuelve a publicar

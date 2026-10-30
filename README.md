@@ -32,7 +32,7 @@ Dashboard interactivo con todos los contratos de obra que las entidades de los t
 
 ## Actualización automática
 
-El dashboard se actualiza **solo, el día 1 de cada mes a las 6:00 a. m.** (hora de Colombia). GitHub Actions ejecuta los tres notebooks, guarda los datos nuevos de SECOP en el repositorio y vuelve a publicar la página. La fecha de corte que muestra el dashboard es la de la última actualización.
+El dashboard se actualiza **solo, todos los lunes a las 6:00 a. m.** (hora de Colombia). GitHub Actions ejecuta los tres notebooks, guarda los datos nuevos de SECOP en el repositorio y vuelve a publicar la página. La fecha de corte que muestra el dashboard es la de la última actualización.
 
 Para actualizar a mano: pestaña **Actions** → **Actualizar dashboard** → **Run workflow**.
 
