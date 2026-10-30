@@ -3,3 +3,4 @@ requests
 duckdb
 openpyxl
 ipykernel
+nbconvert

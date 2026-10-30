@@ -1,5 +1,7 @@
 # Observatorio de Obras Públicas · Pacífico caucano
 
+[![Actualizar dashboard](https://github.com/jerson0915/observatorio-obras-pacifico/actions/workflows/actualizar.yml/badge.svg)](https://github.com/jerson0915/observatorio-obras-pacifico/actions/workflows/actualizar.yml)
+
 **¿Cuánto se invierte en obra pública en Guapi, Timbiquí y López de Micay?**
 
 Dashboard interactivo con todos los contratos de obra que las entidades de los tres municipios de la costa del Cauca (Colombia) publicaron en SECOP I y SECOP II entre 2022 y 2026.
@@ -28,6 +30,12 @@ Dashboard interactivo con todos los contratos de obra que las entidades de los t
 - **219 contratos** tienen la fecha de fin vencida y no figuran liquidados en SECOP.
 - Un solo contrato, el hospital de López de Micay ($42.374 millones, 2026), explica la mayor parte del salto de inversión de 2026.
 
+## Actualización automática
+
+El dashboard se actualiza **solo, todos los días a las 6:00 a. m.** (hora de Colombia). GitHub Actions ejecuta los tres notebooks, guarda los datos nuevos de SECOP en el repositorio y vuelve a publicar la página. La fecha de corte que muestra el dashboard es la de la última actualización.
+
+Para actualizar a mano: pestaña **Actions** → **Actualizar dashboard** → **Run workflow**.
+
 ## Cómo está hecho
 
 | Paso | Notebook | Qué hace |
@@ -36,7 +44,7 @@ Dashboard interactivo con todos los contratos de obra que las entidades de los t
 | 2 | `02_limpieza.ipynb` | Corrige el municipio de la obra, une los nombres repetidos de contratistas, clasifica por sector y marca alertas. |
 | 3 | `03_dashboard.ipynb` | Calcula la inversión por habitante, descarga límites e imágenes satelitales y genera `docs/index.html`. |
 
-**Herramientas:** Python, pandas, DuckDB (SQL), API Socrata de datos.gov.co, Leaflet, HTML, CSS y JavaScript.
+**Herramientas:** Python, pandas, DuckDB (SQL), API Socrata de datos.gov.co, Leaflet, HTML, CSS, JavaScript y GitHub Actions.
 
 ## Cómo reproducirlo
 
