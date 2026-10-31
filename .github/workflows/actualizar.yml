@@ -52,6 +52,12 @@ jobs:
             echo "::endgroup::"
           done
 
+      # Si los datos llegan dañados (caída brusca, valores negativos, una fuente vacía),
+      # el paso falla: no se guarda nada, no se publica y GitHub avisa por correo.
+      - name: Validar los datos
+        if: github.event_name != 'push'
+        run: python validar.py
+
       - name: Guardar los datos nuevos
         if: github.event_name != 'push'
         run: |

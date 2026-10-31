@@ -1,6 +1,20 @@
-<title>Observatorio de Obras Públicas</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Contratos de obra pública en Guapi, Timbiquí y López de Micay (Cauca), 2022–2026, a partir de SECOP I y SECOP II.">
+<title>Observatorio de Obras Públicas · Pacífico caucano</title>
+<meta name="description" content="¿Cuánto se invierte en obra pública en Guapi, Timbiquí y López de Micay? Todos los contratos de obra publicados en SECOP desde 2022: inversión por habitante, contratistas, modalidad y alertas.">
+<meta name="author" content="Jerson Sinisterra">
+<meta name="theme-color" content="#0e6977">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e6977'/%3E%3Crect x='7' y='17' width='4' height='8' rx='1' fill='%23fff'/%3E%3Crect x='14' y='11' width='4' height='14' rx='1' fill='%23fff'/%3E%3Crect x='21' y='7' width='4' height='18' rx='1' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="canonical" href="__SITIO__">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CO">
+<meta property="og:site_name" content="Observatorio de Obras Públicas">
+<meta property="og:title" content="¿Cuánto se invierte en obra pública en el Pacífico caucano?">
+<meta property="og:description" content="Todos los contratos de obra de Guapi, Timbiquí y López de Micay en SECOP desde 2022, con inversión por habitante, contratistas y alertas. Se actualiza cada lunes.">
+<meta property="og:url" content="__SITIO__">
+<meta property="og:image" content="__SITIO__og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Observatorio de Obras Públicas del Pacífico caucano">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -50,6 +64,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 1000; background: var(--bg); }
 .wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -100,7 +115,7 @@ select, input[type="search"], input[type="text"] {
   border-radius: var(--r); padding: 7px 10px; min-height: 36px; max-width: 100%;
 }
 #f-con { width: 230px; }
-#f-mun, #f-sec, #f-ale { width: 170px; }
+#f-mun, #f-sec, #f-mod, #f-ale { width: 170px; }
 #f-desde, #f-hasta { width: 86px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font: inherit; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 6px 11px; cursor: pointer; min-height: 36px; }
@@ -270,8 +285,57 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
 .leaflet-tooltip.mtip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 6px 20px rgba(0,0,0,.2); font-family: var(--font-body); font-size: 12.5px; padding: 8px 10px; }
 .leaflet-tooltip.mtip strong { font-family: var(--font-display); font-size: 16px; }
 
+/* Hallazgos */
+.corte { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 14px 0 0; font-size: 13px; color: var(--ink-2); }
+.corte b { font-weight: 600; color: var(--ink); background: var(--accent-soft); border-radius: 999px; padding: 3px 10px; }
+.findings { margin-top: 22px; }
+.findings h2 { font-size: 13px; font-family: var(--font-body); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.findings ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .findings ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .findings ol { grid-template-columns: minmax(0, 1fr); } }
+.findings li { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--r); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.findings .cifra { font-family: var(--font-display); font-weight: 800; font-stretch: 80%; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.findings .txt { font-size: 13.5px; color: var(--ink-2); }
+
+/* Sin contrato y concentración */
+.sc-rows, .conc { display: flex; flex-direction: column; }
+.sc-row, .conc-row { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 4px 14px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.sc-row:last-child, .conc-row:last-child { border-bottom: 0; }
+.sc-row .name, .conc-row .name { display: flex; align-items: center; gap: 8px; font-weight: 600; min-width: 0; }
+.sc-row .name i, .conc-row .name i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.sc-row .vals, .conc-row .vals { font-size: 13px; color: var(--ink-2); }
+.sc-row .vals b, .conc-row .vals b { font-family: var(--font-data); font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cbar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; background: var(--neutral-soft); margin-bottom: 4px; }
+.cbar span { height: 100%; }
+.sc-list { margin-top: 10px; font-size: 13px; }
+.sc-list summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 6px 0; }
+.sc-list ol { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); }
+.sc-list li b { font-family: var(--font-data); font-weight: 500; color: var(--ink); }
+.note-p { font-size: 12.5px; color: var(--ink-2); background: var(--neutral-soft); border-radius: var(--r); padding: 8px 10px; margin: 12px 0 0; }
+
+/* Tabla: descarga y ficha */
+.tactions { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: var(--r); padding: 7px 12px; cursor: pointer; min-height: 36px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.btn:hover { border-color: var(--muted); }
+.linkbtn { font: inherit; text-align: left; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.linkbtn:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+dialog.ficha { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--ink); padding: 0; box-shadow: 0 20px 48px rgba(0,0,0,.28); }
+dialog.ficha::backdrop { background: rgba(10, 16, 14, .55); }
+.ficha .fhead { display: flex; justify-content: space-between; align-items: start; gap: 12px; padding: 16px 18px 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+.ficha .fhead h2 { font-size: 22px; font-stretch: 85%; }
+.ficha .fbody { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+.ficha .fobj { font-size: 14px; color: var(--ink-2); margin: 0; }
+.ficha dl { display: grid; grid-template-columns: minmax(0, 10rem) minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 13.5px; }
+.ficha dt { color: var(--muted); }
+.ficha dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .ficha dl { grid-template-columns: minmax(0, 1fr); } .ficha dd { margin-bottom: 6px; } }
+.ficha .falerts { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+footer .autor { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; margin-bottom: 8px; font-size: 13.5px; color: var(--ink-2); }
+footer .autor b { color: var(--ink); }
+
 @media (prefers-reduced-motion: no-preference) { .bar, .estbar div, .share span { transition: width .35s ease; } }
 </style>
+<!--__CUERPO__-->
 
 <header class="top wrap">
   <div class="topbar">
@@ -307,8 +371,13 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
     </details>
   </div>
   <h1>¿Cuánto se invierte en obra pública en <span>Guapi, Timbiquí y López de Micay</span>?</h1>
-  <p class="lede">Todos los contratos de obra que las entidades de estos tres municipios publicaron en SECOP I y SECOP II desde 2022. Filtra por municipio, contratista, tipo de obra o estado. También puedes hacer clic en el mapa o en cualquier barra para filtrar.</p>
-  <div class="meta"><span id="m-corte"></span><span>Fuentes: SECOP I y II (datos.gov.co) · Población: DANE</span><span>Pesos colombianos · M = millones</span></div>
+  <p class="corte"><b id="m-corte"></b><span>Se actualiza solo cada lunes</span></p>
+  <p class="lede">Todos los contratos de obra que las entidades de estos tres municipios publicaron en SECOP I y SECOP II desde 2022. Filtra por municipio, contratista, tipo de obra o estado. También puedes hacer clic en el mapa, en cualquier barra o en un contrato para ver su ficha.</p>
+  <div class="meta"><span>Fuentes: SECOP I y II (datos.gov.co) · Población: DANE</span><span>Pesos colombianos · M = millones</span></div>
+  <section class="findings" aria-labelledby="h-hallazgos">
+    <h2 id="h-hallazgos">Lo que muestran los datos</h2>
+    <ol id="hallazgos"></ol>
+  </section>
 </header>
 
 <div class="filters">
@@ -317,6 +386,7 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
       <div class="f"><label for="f-mun">Municipio</label><select id="f-mun"></select></div>
       <div class="f"><label for="f-con">Contratista</label><input id="f-con" type="text" list="l-con" placeholder="Todos" autocomplete="off"><datalist id="l-con"></datalist></div>
       <div class="f"><label for="f-sec">Tipo de obra</label><select id="f-sec"></select></div>
+      <div class="f"><label for="f-mod">Modalidad</label><select id="f-mod"></select></div>
       <div class="f"><label for="f-desde">Desde</label><select id="f-desde"></select></div>
       <div class="f"><label for="f-hasta">Hasta</label><select id="f-hasta"></select></div>
       <div class="f"><label for="f-ale">Alertas</label><select id="f-ale"></select></div>
@@ -360,6 +430,14 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
     <div id="timeline"></div>
   </div>
 
+  <div class="card mt">
+    <h2>Obras adjudicadas sin contrato publicado</h2>
+    <div class="sub">Procesos de obra que figuran como <em>adjudicados</em> en SECOP I, pero sin fecha de firma, contratista ni valor del contrato. No se suman a la inversión: el valor es el presupuesto del proceso.</div>
+    <div class="sc-rows" id="sc-rows"></div>
+    <p class="note-p" id="sc-note"></p>
+    <details class="sc-list"><summary id="sc-sum">Ver los procesos más grandes</summary><ol id="sc-list"></ol></details>
+  </div>
+
   <div class="kpis" id="kpis"></div>
 
   <div class="grid">
@@ -377,6 +455,7 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
         <div class="sub">Según SECOP y la fecha de fin del contrato</div>
         <div class="estbar" id="estbar" aria-hidden="true"></div>
         <div class="estlist" id="estlist"></div>
+        <p class="note-p"><b>Plazo vencido no quiere decir obra abandonada.</b> Muchas entidades nunca registran en SECOP la liquidación del contrato, aunque la obra esté terminada. Es una señal para preguntar, no una conclusión.</p>
       </div>
       <div class="card">
         <h2>Tipo de obra</h2>
@@ -399,6 +478,21 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
     </div>
   </div>
 
+  <div class="grid2">
+    <div class="card">
+      <h2>Cómo se contrató</h2>
+      <div class="sub">Valor por modalidad de contratación. Entre paréntesis, el número de contratos</div>
+      <div class="hbars" id="modalidades"></div>
+      <p class="note-p"><b>Mínima cuantía</b> y <b>contratación directa</b> tienen poca o ninguna competencia. Muchos contratos pequeños parecidos pueden ser una obra grande partida para evitar la licitación.</p>
+    </div>
+    <div class="card">
+      <h2>¿Cuánto se llevan los primeros contratistas?</h2>
+      <div class="sub">Parte del valor contratado que se llevan el primer contratista y los cinco primeros</div>
+      <div class="legend" id="conc-legend"></div>
+      <div class="conc" id="conc"></div>
+    </div>
+  </div>
+
   <div class="card mt">
     <h2>Alertas para revisar</h2>
     <div class="sub">Son señales para mirar con más cuidado, no pruebas de irregularidad. Haz clic en una para ver esos contratos.</div>
@@ -408,7 +502,11 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
   <div class="card mt">
     <div class="tablehead">
       <div><h2>Contratos</h2><div class="sub" id="t-sub" style="margin-bottom:0"></div></div>
-      <div class="f"><label for="q">Buscar en la descripción</label><input id="q" type="search" placeholder="acueducto, quebrada, aula…"></div>
+      <div class="tactions">
+        <div class="f"><label for="q">Buscar en la descripción</label><input id="q" type="search" placeholder="acueducto, quebrada, aula…"></div>
+        <button type="button" class="btn" id="csv">Descargar CSV</button>
+        <a class="btn" id="csv-todo" href="datos/obras_limpias.csv" download>Todos los datos</a>
+      </div>
     </div>
     <div class="tscroll"><table>
       <thead><tr id="thead"></tr></thead>
@@ -421,26 +519,33 @@ footer { padding-block: 0 32px; font-size: 12.5px; color: var(--muted); }
     <div>
       <h3>De dónde salen los datos</h3>
       <p>Contratos de tipo <em>obra</em> publicados en SECOP II (<code>jbjy-vk9h</code>) y SECOP I (<code>f789-7hwg</code>) en datos.gov.co por entidades de Guapi, Timbiquí y López de Micay, firmados desde 2022 hasta la fecha de corte. La población viene de las proyecciones municipales 2018–2042 del DANE, basadas en el Censo 2018.</p>
+      <p>Estas alcaldías publican casi todo en SECOP I; en SECOP II solo aparecen algunos contratos de las E.S.E. de salud.</p>
     </div>
     <div>
       <h3>Cómo se calculó</h3>
       <ul>
         <li><b>Inversión</b> es el valor firmado de los contratos, no lo pagado.</li>
         <li><b>Por habitante</b> divide el valor de cada año por la población DANE de ese año. Para un rango de años, se suman los valores anuales por habitante.</li>
+        <li>Se excluyen los contratos que SECOP marca como obra pero son prestación de servicios o interventoría <span id="m-excl"></span>.</li>
         <li>El municipio se corrige cuando la descripción nombra solo uno de los tres, y los nombres de un mismo contratista se unen en uno.</li>
-        <li>Estado: <b>Terminada</b> significa liquidada. <b>Plazo vencido</b> significa que la fecha de fin ya pasó y el contrato no figura liquidado. <b>En contratación</b> es un proceso abierto que todavía no tiene contrato.</li>
+        <li>Estado: <b>Terminada</b> significa liquidada. <b>Plazo vencido</b> significa que la fecha de fin ya pasó y el contrato no figura liquidado, lo que no prueba que la obra esté abandonada. <b>En contratación</b> es un proceso abierto que todavía no tiene contrato.</li>
       </ul>
     </div>
     <div>
       <h3>Límites</h3>
-      <p>El mapa ubica cada contrato en la cabecera de su municipio porque SECOP no publica coordenadas de las obras. Las adiciones de valor no aparecen porque estas fuentes no las publican para estos municipios. Las alertas son reglas automáticas, y cada caso debe verificarse en el enlace a SECOP.</p>
+      <p>El mapa ubica cada contrato en la cabecera de su municipio porque SECOP no publica coordenadas de las obras. Las adiciones de valor no aparecen porque estas fuentes no las publican para estos municipios. Los procesos adjudicados sin contrato publicado no entran en la inversión, así que la de los municipios que más los tienen está subestimada. Las alertas son reglas automáticas, y cada caso debe verificarse en el enlace a SECOP.</p>
     </div>
   </section>
 </main>
 <footer class="wrap">
-  <div>Proyecto de análisis de datos de Jerson Sinisterra · Python, pandas, DuckDB y Leaflet · Imágenes satelitales: Esri, Maxar, Earthstar Geographics · Límites municipales: © colaboradores de OpenStreetMap</div>
+  <div class="autor" id="autor"></div>
+  <div>Python, pandas, DuckDB y Leaflet · Imágenes satelitales: Esri, Maxar, Earthstar Geographics · Límites municipales: © colaboradores de OpenStreetMap</div>
 </footer>
 <div id="tip" hidden></div>
+<dialog class="ficha" id="ficha" aria-labelledby="ficha-t">
+  <div class="fhead"><div><div class="eyebrow" id="ficha-e"></div><h2 id="ficha-t"></h2></div><button type="button" class="btn" id="ficha-x">Cerrar</button></div>
+  <div class="fbody" id="ficha-b"></div>
+</dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -482,7 +587,7 @@ const alertKeys = Object.keys(ALERTAS).filter((k) => C.some((c) => c.alertas.inc
 /* ---------- estado de filtros ---------- */
 const anios = [...new Set(C.map((c) => c.anio))].sort();
 const A0 = anios[0], A1 = anios[anios.length - 1];
-const S = { mun: "", con: "", sec: "", desde: A0, hasta: A1, ale: "", est: new Set(), q: "", sort: { k: "fecha", dir: -1 }, page: 0, tl: "total" };
+const S = { mun: "", con: "", sec: "", mod: "", desde: A0, hasta: A1, ale: "", est: new Set(), q: "", sort: { k: "fecha", dir: -1 }, page: 0, tl: "total" };
 try {
   const saved = JSON.parse(localStorage.getItem("obs-filtros") || "null");
   if (saved) Object.assign(S, saved, { est: new Set(saved.est || []), page: 0 });
@@ -491,13 +596,16 @@ try {
 const persist = () => { try { localStorage.setItem("obs-filtros", JSON.stringify({ ...S, est: [...S.est] })); } catch (e) {} };
 const yearsInRange = () => anios.filter((a) => a >= S.desde && a <= S.hasta);
 
+/* skip: un filtro o una lista de filtros que no se aplican */
 function pass(c, skip) {
-  if (skip !== "mun" && S.mun && c.municipio !== S.mun) return false;
-  if (skip !== "con" && S.con && c.contratista !== S.con) return false;
-  if (skip !== "sec" && S.sec && c.sector !== S.sec) return false;
-  if (skip !== "anio" && (c.anio < S.desde || c.anio > S.hasta)) return false;
-  if (skip !== "ale" && S.ale && !(S.ale === "*" ? c.alertas.length : c.alertas.includes(S.ale))) return false;
-  if (skip !== "est" && S.est.size && !S.est.has(c.estado)) return false;
+  const no = (k) => skip === k || (Array.isArray(skip) && skip.includes(k));
+  if (!no("mun") && S.mun && c.municipio !== S.mun) return false;
+  if (!no("con") && S.con && c.contratista !== S.con) return false;
+  if (!no("sec") && S.sec && c.sector !== S.sec) return false;
+  if (!no("mod") && S.mod && c.modalidad !== S.mod) return false;
+  if (!no("anio") && (c.anio < S.desde || c.anio > S.hasta)) return false;
+  if (!no("ale") && S.ale && !(S.ale === "*" ? c.alertas.length : c.alertas.includes(S.ale))) return false;
+  if (!no("est") && S.est.size && !S.est.has(c.estado)) return false;
   return true;
 }
 /* Valor por habitante: suma, año por año, del valor dividido por la población DANE de ese año */
@@ -519,6 +627,7 @@ function fillSelect(sel, opts, all) {
 }
 fillSelect($("f-mun"), MUN.map((m) => [m.nombre, m.titulo]), "Todos");
 fillSelect($("f-sec"), [...new Set(C.map((c) => c.sector))].sort().map((s) => [s, s]), "Todos");
+fillSelect($("f-mod"), [...new Set(C.map((c) => c.modalidad))].sort().map((s) => [s, s]), "Todas");
 fillSelect($("f-desde"), anios.map((a) => [a, a]));
 fillSelect($("f-hasta"), anios.map((a) => [a, a]));
 fillSelect($("f-ale"), [["*", "Con cualquier alerta"], ...alertKeys.map((k) => [k, ALERTAS[k].t])], "Todas");
@@ -537,25 +646,26 @@ const bindSel = (id, key, num) => $(id).addEventListener("change", (ev) => {
   if (S.desde > S.hasta) { if (key === "desde") S.hasta = S.desde; else S.desde = S.hasta; }
   update();
 });
-bindSel("f-mun", "mun"); bindSel("f-sec", "sec"); bindSel("f-desde", "desde", true); bindSel("f-hasta", "hasta", true); bindSel("f-ale", "ale");
+bindSel("f-mun", "mun"); bindSel("f-sec", "sec"); bindSel("f-mod", "mod"); bindSel("f-desde", "desde", true); bindSel("f-hasta", "hasta", true); bindSel("f-ale", "ale");
 $("f-con").addEventListener("change", (ev) => {
   const v = ev.target.value.trim().toUpperCase();
   const hit = CONTRATISTAS.find((n) => n.toUpperCase() === v);
   S.con = hit || ""; if (!hit) ev.target.value = ""; update();
 });
 $("q").addEventListener("input", (ev) => { S.q = ev.target.value; S.page = 0; renderTable(); });
-$("reset").addEventListener("click", () => { Object.assign(S, { mun: "", con: "", sec: "", desde: A0, hasta: A1, ale: "", q: "", page: 0 }); S.est.clear(); $("q").value = ""; update(); });
+$("reset").addEventListener("click", () => { Object.assign(S, { mun: "", con: "", sec: "", mod: "", desde: A0, hasta: A1, ale: "", q: "", page: 0 }); S.est.clear(); $("q").value = ""; update(); });
 $("tl-total").addEventListener("click", () => { S.tl = "total"; persist(); renderTimeline(); });
 $("tl-pc").addEventListener("click", () => { S.tl = "pc"; persist(); renderTimeline(); });
 const toggle = (key, v) => { S[key] = S[key] === v ? "" : v; update(); };
 
 function syncControls() {
-  $("f-mun").value = S.mun; $("f-sec").value = S.sec; $("f-desde").value = S.desde; $("f-hasta").value = S.hasta; $("f-ale").value = S.ale; $("f-con").value = S.con;
+  $("f-mun").value = S.mun; $("f-sec").value = S.sec; $("f-mod").value = S.mod; $("f-desde").value = S.desde; $("f-hasta").value = S.hasta; $("f-ale").value = S.ale; $("f-con").value = S.con;
   for (const b of $("f-est").children) b.setAttribute("aria-pressed", S.est.has(b.dataset.k));
   const parts = [];
   if (S.mun) parts.push(MUNBY[S.mun].titulo);
   if (S.con) parts.push(S.con);
   if (S.sec) parts.push(S.sec);
+  if (S.mod) parts.push(S.mod.toLowerCase());
   if (S.est.size) parts.push([...S.est].join(" o "));
   if (S.ale) parts.push(S.ale === "*" ? "con alertas" : ALERTAS[S.ale].t.toLowerCase());
   if (S.desde !== A0 || S.hasta !== A1) parts.push(S.desde === S.hasta ? `${S.desde}` : `${S.desde}–${S.hasta}`);
@@ -847,6 +957,122 @@ function renderAlerts() {
   }));
 }
 
+/* ---------- adjudicadas sin contrato publicado ---------- */
+// Responden a municipio, tipo de obra, modalidad y años; no tienen contratista, estado ni alertas
+const SC = DATA.sinContrato || [];
+function renderSinContrato() {
+  const ok = (r) => (!S.sec || r.sector === S.sec) && (!S.mod || r.modalidad === S.mod) && r.anio >= S.desde && r.anio <= S.hasta;
+  const sc = SC.filter(ok);
+  const firm = C.filter((c) => pass(c, ["mun", "con", "est", "ale"]));
+  const scBy = groupBy(sc, (r) => r.municipio), fBy = groupBy(firm, (c) => c.municipio);
+  const maxV = Math.max(1, ...MUN.map((m) => sum(scBy.get(m.nombre) || [], (r) => r.valor)));
+  $("sc-rows").replaceChildren(...MUN.map((m) => {
+    const rows = scBy.get(m.nombre) || [], v = sum(rows, (r) => r.valor), f = sum(fBy.get(m.nombre) || [], (c) => c.valor);
+    const d = el("div", "sc-row");
+    if (S.mun && S.mun !== m.nombre) d.style.opacity = .45;
+    const name = el("span", "name"); const i = el("i"); i.style.background = `var(${m.color})`; name.append(i, document.createTextNode(m.titulo));
+    const vals = el("div", "vals");
+    const bar = el("div", "cbar"); const fill = el("span"); fill.style.width = (100 * v) / maxV + "%"; fill.style.background = `var(${m.color})`; bar.append(fill);
+    const comp = !v ? "" : f ? ` · equivale al ${pct(v, f)} de lo que sí tiene firmado` : " · no tiene contratos firmados con estos filtros";
+    vals.append(bar, el("b", null, M(v)), document.createTextNode(` en ${nf.format(rows.length)} procesos${comp}`));
+    d.append(name, vals);
+    return d;
+  }));
+  const tot = sum(sc, (r) => r.valor), totF = sum(firm, (c) => c.valor);
+  $("sc-note").textContent = sc.length
+    ? `En total, ${nf.format(sc.length)} procesos por ${M(tot)}, el ${pct(tot, totF)} de lo firmado. Si esos contratos se firmaron, la inversión real es mayor que la del tablero, sobre todo en los municipios con la barra más larga.`
+    : "No hay procesos adjudicados sin contrato con estos filtros.";
+  const top = sc.filter((r) => !S.mun || r.municipio === S.mun).sort((a, b) => b.valor - a.valor).slice(0, 10);
+  $("sc-sum").textContent = `Ver los ${top.length} procesos más grandes${S.mun ? " de " + MUNBY[S.mun].titulo : ""}`;
+  $("sc-list").replaceChildren(...top.map((r) => {
+    const li = el("li"); li.append(el("b", null, M(r.valor)), document.createTextNode(` · ${MUNBY[r.municipio].titulo} · ${r.anio} · ${r.modalidad} · ${r.objeto.length > 150 ? r.objeto.slice(0, 150) + "…" : r.objeto} `));
+    if (r.url) { const a = el("a", null, "SECOP ↗"); a.href = r.url; a.target = "_blank"; a.rel = "noopener"; li.append(a); }
+    return li;
+  }));
+}
+
+/* ---------- concentración de contratistas ---------- */
+function renderConcentracion() {
+  const base = C.filter((c) => pass(c, ["mun", "con"]));
+  const grupos = [{ t: "Los tres municipios", color: "--ink", rows: base }, ...MUN.map((m) => ({ t: m.titulo, color: m.color, nombre: m.nombre, rows: base.filter((c) => c.municipio === m.nombre) }))];
+  $("conc-legend").replaceChildren(...[["Primer contratista", 1], ["Del 2.º al 5.º", .45], ["Los demás", 0]].map(([t, o]) => {
+    const s = el("span"); const i = el("i"); i.style.height = "10px"; i.style.width = "10px";
+    i.style.background = o ? `color-mix(in srgb, var(--accent) ${o * 100}%, var(--surface))` : "var(--neutral-soft)";
+    s.append(i, document.createTextNode(t)); return s;
+  }));
+  $("conc").replaceChildren(...grupos.map((g) => {
+    const d = el("div", "conc-row");
+    if (S.mun && g.nombre && S.mun !== g.nombre) d.style.opacity = .45;
+    const name = el("span", "name"); const i = el("i"); i.style.background = `var(${g.color})`; name.append(i, document.createTextNode(g.t));
+    const tot = sum(g.rows, (c) => c.valor);
+    const ranking = agg(g.rows, (c) => c.contratista);
+    const v1 = ranking[0] ? ranking[0].v : 0, v5 = sum(ranking.slice(0, 5), (r) => r.v);
+    const bar = el("div", "cbar");
+    const a = el("span"); a.style.width = (tot ? (100 * v1) / tot : 0) + "%"; a.style.background = "var(--accent)";
+    const b = el("span"); b.style.width = (tot ? (100 * (v5 - v1)) / tot : 0) + "%"; b.style.background = "color-mix(in srgb, var(--accent) 45%, var(--surface))";
+    bar.append(a, b);
+    const vals = el("div", "vals");
+    vals.append(bar, document.createTextNode("Primero: "), el("b", null, pct(v1, tot)), document.createTextNode(" · 5 primeros: "), el("b", null, pct(v5, tot)), document.createTextNode(` · ${nf.format(ranking.length)} contratistas`));
+    if (ranking[0]) {
+      vals.addEventListener("pointermove", (ev) => showTip(ev, g.t, [`Primero: ${ranking[0].k}`, `${M(v1)} en ${nf.format(ranking[0].n)} contratos`]));
+      vals.addEventListener("pointerleave", hideTip);
+    }
+    d.append(name, vals);
+    return d;
+  }));
+}
+
+/* ---------- ficha de un contrato ---------- */
+const fechaLarga = (s) => s ? new Date(s + "T12:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }) : "Sin dato";
+const NOTA_ESTADO = {
+  "Plazo vencido": "La fecha de fin ya pasó y el contrato no figura liquidado en SECOP. No prueba que la obra esté abandonada: muchas entidades no registran la liquidación.",
+  "Terminada": "El contrato figura liquidado, terminado o cerrado en SECOP.",
+  "En ejecución": "Contrato firmado con la fecha de fin por delante.",
+  "En contratación": "En SECOP figura como convocado: hay proceso pero todavía no hay contrato.",
+};
+function abrirFicha(c) {
+  $("ficha-e").textContent = `${c.municipioTitulo} · ${c.sector} · ${c.anio}`;
+  $("ficha-t").textContent = M(c.valor);
+  const dl = el("dl");
+  const fila = (k, v) => { if (v == null || v === "") return; dl.append(el("dt", null, k)); const dd = el("dd"); if (v instanceof Node) dd.append(v); else dd.textContent = v; dl.append(dd); };
+  const est = el("span"); est.append(el("span", "pill " + (ESTADOS.find((e) => e.k === c.estado) || {}).cls, c.estado), el("div", "sub", NOTA_ESTADO[c.estado] || ""));
+  fila("Estado", est);
+  fila("Contratista", c.contratista);
+  fila("Entidad", c.entidad);
+  fila("Municipio de la obra", c.municipioTitulo + (c.municipioEntidad && c.municipioEntidad !== c.municipioTitulo ? ` (la entidad es de ${c.municipioEntidad})` : ""));
+  fila("Modalidad", c.modalidad);
+  fila("Firma", fechaLarga(c.fecha));
+  fila("Inicio y fin", c.inicio || c.fin ? `${fechaLarga(c.inicio)} → ${fechaLarga(c.fin)}` : "");
+  fila("Plazo", c.plazo != null ? `${nf.format(c.plazo)} días` : "");
+  fila("Estado en SECOP", c.estadoSecop);
+  fila("Fuente", c.fuente);
+  const body = [el("p", "fobj", c.objeto), dl];
+  if (c.alertas.length) {
+    const al = el("div", "falerts"); al.append(el("div", "lab", "Alertas"));
+    for (const a of c.alertas) { const r = el("div"); r.append(el("span", "tag " + ALERTAS[a].cls, ALERTAS[a].t), document.createTextNode(" " + ALERTAS[a].d)); al.append(r); }
+    body.push(al);
+  }
+  if (c.url) { const a = el("a", "btn", "Ver el contrato en SECOP ↗"); a.href = c.url; a.target = "_blank"; a.rel = "noopener"; body.push(a); }
+  $("ficha-b").replaceChildren(...body);
+  hideTip();
+  $("ficha").showModal();
+}
+$("ficha-x").addEventListener("click", () => $("ficha").close());
+$("ficha").addEventListener("click", (ev) => { if (ev.target === $("ficha")) $("ficha").close(); });
+
+/* ---------- descarga CSV ---------- */
+function descargarCSV(rows) {
+  const cols = [["id", (c) => c.id], ["fuente", (c) => c.fuente], ["municipio", (c) => c.municipioTitulo], ["fecha_firma", (c) => c.fecha],
+    ["fecha_inicio", (c) => c.inicio], ["fecha_fin", (c) => c.fin], ["sector", (c) => c.sector], ["modalidad", (c) => c.modalidad],
+    ["entidad", (c) => c.entidad], ["contratista", (c) => c.contratista], ["estado", (c) => c.estado], ["estado_secop", (c) => c.estadoSecop],
+    ["valor", (c) => c.valor], ["alertas", (c) => c.alertas.map((a) => ALERTAS[a].t).join("; ")], ["url", (c) => c.url], ["objeto", (c) => c.objeto]];
+  const q = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const csv = [cols.map(([k]) => k).join(","), ...rows.map((c) => cols.map(([, f]) => q(f(c))).join(","))].join("\n");
+  const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+  const a = el("a"); a.href = url; a.download = `obras-pacifico-caucano-${DATA.corteISO}.csv`; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 /* ---------- tabla ---------- */
 const COLS = [
   { k: "fecha", t: "Firma", cls: "mono", get: (c) => c.fecha },
@@ -871,18 +1097,22 @@ function renderHead() {
 }
 const PAGE = 25;
 const sinTildes = (s) => s.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-function renderTable() {
+function filasTabla() {
   const q = sinTildes(S.q.trim());
   const rows = C.filter((c) => pass(c) && (!q || c.objeto.includes(q)));
   const col = COLS.find((c) => c.k === S.sort.k) || COLS[0];
-  rows.sort((a, b) => { const x = col.get(a), y = col.get(b); return (x > y ? 1 : x < y ? -1 : 0) * S.sort.dir; });
+  return rows.sort((a, b) => { const x = col.get(a), y = col.get(b); return (x > y ? 1 : x < y ? -1 : 0) * S.sort.dir; });
+}
+function renderTable() {
+  const rows = filasTabla();
   const pages = Math.max(1, Math.ceil(rows.length / PAGE));
   S.page = Math.min(S.page, pages - 1);
   const est = Object.fromEntries(ESTADOS.map((e) => [e.k, e.cls]));
   $("tbody").replaceChildren(...rows.slice(S.page * PAGE, S.page * PAGE + PAGE).map((c) => {
     const tr = el("tr");
     tr.append(el("td", "mono", c.fecha), el("td", null, c.municipioTitulo));
-    const o = el("td", "obj", c.objeto.length > 170 ? c.objeto.slice(0, 170) + "…" : c.objeto); o.title = c.objeto; tr.append(o);
+    const o = el("td", "obj"); const ob = el("button", "linkbtn", c.objeto.length > 170 ? c.objeto.slice(0, 170) + "…" : c.objeto);
+    ob.type = "button"; ob.title = "Ver la ficha del contrato"; ob.addEventListener("click", () => abrirFicha(c)); o.append(ob); tr.append(o);
     tr.append(el("td", null, c.contratista), el("td", null, c.sector));
     const tdE = el("td"); tdE.append(el("span", "pill " + est[c.estado], c.estado)); tr.append(tdE);
     tr.append(el("td", "mono r", M(c.valor)));
@@ -893,12 +1123,14 @@ function renderTable() {
     return tr;
   }));
   if (!rows.length) { const tr = el("tr"); const td = el("td", "empty", "Ningún contrato coincide. Prueba quitando algún filtro."); td.colSpan = COLS.length; tr.append(td); $("tbody").replaceChildren(tr); }
-  $("t-sub").textContent = `${nf.format(rows.length)} contratos · ${M(sum(rows, (c) => c.valor))}`;
+  $("t-sub").textContent = `${nf.format(rows.length)} contratos · ${M(sum(rows, (c) => c.valor))} · haz clic en la descripción para ver la ficha`;
+  $("csv").textContent = `Descargar CSV (${nf.format(rows.length)})`;
   $("pinfo").textContent = `Página ${S.page + 1} de ${pages}`;
   $("prev").disabled = S.page === 0; $("next").disabled = S.page >= pages - 1;
 }
 $("prev").addEventListener("click", () => { S.page--; renderTable(); });
 $("next").addEventListener("click", () => { S.page++; renderTable(); });
+$("csv").addEventListener("click", () => descargarCSV(filasTabla()));
 
 /* ---------- todo junto ---------- */
 // Cada sección se dibuja por separado: si una falla, las demás siguen apareciendo
@@ -910,6 +1142,20 @@ function update() {
   seguro("mapa", renderMap); seguro("estado", renderEstado); seguro("años", renderYears); seguro("alertas", renderAlerts); seguro("tabla", renderTable);
   seguro("sectores", () => hbars($("sectores"), agg(C.filter((c) => pass(c, "sec")), (c) => c.sector), "sec"));
   seguro("contratistas", () => hbars($("contratistas"), agg(C.filter((c) => pass(c, "con")), (c) => c.contratista).slice(0, 10), "con", (r) => `${r.k} (${r.n})`));
+  seguro("modalidades", () => hbars($("modalidades"), agg(C.filter((c) => pass(c, "mod")), (c) => c.modalidad), "mod", (r) => `${r.k} (${r.n})`));
+  seguro("concentración", renderConcentracion); seguro("sin contrato", renderSinContrato);
+}
+
+/* ---------- textos fijos: hallazgos, autor, exclusiones ---------- */
+function renderFijos() {
+  $("hallazgos").replaceChildren(...(DATA.hallazgos || []).map((h) => { const li = el("li"); li.append(el("span", "cifra", h.cifra), el("span", "txt", h.texto)); return li; }));
+  $("h-hallazgos").parentElement.hidden = !(DATA.hallazgos || []).length;
+  const au = DATA.autor || {};
+  const links = [["GitHub", au.github], ["LinkedIn", au.linkedin], ["Correo", au.correo && "mailto:" + au.correo]].filter(([, u]) => u);
+  $("autor").replaceChildren(el("b", null, au.nombre || ""), ...(au.descripcion ? [el("span", null, au.descripcion)] : []),
+    ...links.map(([t, u]) => { const a = el("a", null, t); a.href = u; if (!u.startsWith("mailto:")) { a.target = "_blank"; a.rel = "noopener"; } return a; }));
+  $("m-excl").textContent = DATA.excluidos ? `(${nf.format(DATA.excluidos)} contratos; están en datos/excluidos.csv)` : "";
+  if (!DATA.conArchivos) $("csv-todo").hidden = true;
 }
 /* ---------- apariencia: paletas, colores propios y modo ---------- */
 // Cada paleta trae su versión clara y oscura: [acento, Guapi, Timbiquí, López de Micay]
@@ -953,9 +1199,9 @@ $("look-reset").addEventListener("click", () => { LOOK = { ...LOOK0, propios: {}
 document.addEventListener("click", (ev) => { if ($("look").open && !$("look").contains(ev.target)) $("look").open = false; });
 document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") $("look").open = false; });
 
-$("m-corte").textContent = `Datos con corte al ${DATA.corteTexto}`;
+$("m-corte").textContent = `Datos al ${DATA.corteTexto}`;
 applyLook(false);
-seguro("mapa", initMap); renderHead(); update();
+seguro("textos", renderFijos); seguro("mapa", initMap); renderHead(); update();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyLook(true));
 new MutationObserver(() => { const want = LOOK.modo === "auto" ? undefined : LOOK.modo; if (root.dataset.theme !== want) { LOOK.modo = root.dataset.theme || "auto"; } lookColors().forEach((c, i) => root.style.setProperty(VARS[i], c)); renderMap(); renderTimeline(); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 </script>
